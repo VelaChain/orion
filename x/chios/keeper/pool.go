@@ -109,12 +109,8 @@ func (k Keeper) GetPoolsPaginated(ctx sdk.Context, pagination *query.PageRequest
 	return pools, pageRes, nil
 }
 
-func (k Keeper) GetAllPoolsIterator(ctx sdk.Context) sdk.Iterator {
+func (k Keeper) GetPoolsIterator(ctx sdk.Context) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	return sdk.KVStorePrefixIterator(store, types.KeyPoolPrefix)
 }
 
-// TODO
-func (k Keeper) RemoveLiquidityProvider(ctx sdk.Context, lpAddr string) error {
-	return nil
-}
