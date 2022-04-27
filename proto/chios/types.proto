@@ -1,0 +1,119 @@
+syntax = "proto3";
+package VelaChain.orion.chios;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/VelaChain/orion/x/chios/types";
+
+message LiquidityProvider {
+	// address of provider
+	string creator = 1 [
+		(gogoproto.moretags) = "yaml:\"LiquidityProvider_address\""
+	];
+	// list of pool shares owned by provider
+ 	PoolShares liquid = 2 [ 
+		(gogoproto.customname) = "Liquidity",
+		(gogoproto.nullable) = false,
+		(gogoproto.moretags) = "yaml:\"LiquidityProvider_liquidity\""
+	];
+}
+
+
+message LiquidityProviders {
+	// Name of associated pool
+	string name = 1 [
+		(gogoproto.moretags) = "yaml:\"LiquidityProviders_name\""
+	];
+	// liquidity providers
+	repeated LiquidityProvider LiquidProviders = 2 [
+		(gogoproto.customname) = "Providers",
+		(gogoproto.nullable) = false,
+		(gogoproto.moretags) = "yaml:\"LiquidityProviders_providers\""
+	];
+}
+
+message PoolAsset {
+	// symbol contains denom
+	string symbol = 1 [	
+		(gogoproto.moretags) = "yaml:\"asset_symbol\"" 
+	];
+	// skd.Uint amout of pool asset
+	string amount = 2 [
+		(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+		(gogoproto.nullable) = false,
+		(gogoproto.moretags) = "yaml:\"asset_amount\""
+	];
+}
+
+message PoolAssets {
+	repeated PoolAsset a = 1 [
+		(gogoproto.customname) = "Assets",
+		(gogoproto.nullable) = false,
+		(gogoproto.moretags) = "yaml:\"PoolAsset_assets\""
+	];
+}
+
+message PoolShares {
+	// symbol contains share denom
+	string symbol = 1[
+		(gogoproto.moretags) = "yaml:\"PoolShares_symbol\""
+	]; 
+	// amount of shares
+	string amount = 2 [
+		(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+		(gogoproto.nullable) = false,
+		(gogoproto.moretags) = "yaml:\"PoolShares_amount\""
+	];
+}
+
+message Pool {
+	// name of pool to index by
+	// structure as: tokenA-tokenB-...-tokenN 
+	// in a lexigraphical ordering
+	string id = 1 [
+		(gogoproto.customname) = "PoolId",
+		(gogoproto.moretags) = "yaml:\"Pool_id\""
+	];
+	// pool number (number of pools when pool is created)
+	uint64 number = 2 [
+		(gogoproto.moretags) = "yaml:\"Pool_number\""
+	]; 
+	// pool assets owned by pool
+	PoolAssets poolAssets = 3 [
+		(gogoproto.customname) = "Assets",
+		(gogoproto.nullable) = false,
+		(gogoproto.moretags) = "yaml:\"Pool_assets\"" 
+	];
+	// pool shares live in chain (minted and not yet burned)
+	chios.PoolShares poolShares = 4 [
+		(gogoproto.customname) = "Shares",
+		(gogoproto.nullable) = false,
+		(gogoproto.moretags) = "yaml:\"Pool_shares\""
+	];
+	// liquidity providers for the pool
+	// pool shares should equal the sum of
+	// liquidity providers' shares amounts
+	LiquidityProviders liquidityProviders = 5 [
+		(gogoproto.customname) = "Providers",
+		(gogoproto.nullable) = false,
+		(gogoproto.moretags) = "yaml:\"Pool_providers\""
+	];
+	// fee to swap using pool
+	// TODO figure out how fee (charged in native tokens) should
+	// be determined for a pool between two external tokens
+	string swapFee = 6 [
+		(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+		(gogoproto.nullable) = false,
+		(gogoproto.moretags) = "yaml:\"Pool_swapFee\""
+	];
+	// fee to exit the pool
+	// TODO determine how fee is paid - could burn % before
+	// exchanging shares for assets
+	string exitFee = 7 [
+		(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+ 		(gogoproto.nullable) = false,
+		(gogoproto.moretags) = "yaml:\"Pool_exitFee\""
+	];
+}
+
+
