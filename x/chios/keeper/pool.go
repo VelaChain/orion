@@ -69,7 +69,7 @@ func (k Keeper) SafeRemovePool(ctx sdk.Context, poolName string) error {
 	return nil
 }
  
-// DOES NOT CHECK FOR REMAINING LIQUIDITY - must check before
+// DOES NOT CHECK FOR REMAINING LIQUIDITY - must check before calling
 func (k Keeper) RemovePool(ctx sdk.Context, poolName string) error {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetPoolKeyFromPoolName(poolName)

@@ -58,6 +58,14 @@ func NewPoolAsset(symbol string, amount sdk.Int) PoolAsset{
 	return pa	
 }
 
+func NewPoolShares(symbol string, amount sdk.Int) PoolShare{
+	ps := PoolShares{
+		Symbol:	symbol,
+		Amount:	amount,
+	}
+	return ps
+}
+
 // Returns new pool assets
 func NewPoolAssets(a []PoolAsset) PoolAssets {
 	pa := PoolAssets{ Assets: a }
