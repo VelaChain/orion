@@ -21,13 +21,42 @@ const (
 
 	// PortID is the default port id that module binds to
 	PortID = "chios"
+
+	// default fee for swaps and exiting
+	PoolDefaultFee = "0.003"
 )
 
 var (
 	// PortKey defines the key to store the port ID in store
-	PortKey = KeyPrefix("chios-port-")
+	PortKey = []byte{0x00}
+	// key for storing the pools map
+	KeyPoolPrefix = []byte{0x01}	
+	// key for storing lps
+	KeyProviderPrefix = []byte{0x02}
+	// key for pool count
+	KeyPoolCount = []byte{0x03}
 )
 
-func KeyPrefix(p string) []byte {
-	return []byte(p)
+func GetPoolKeyFromAssets(assets PoolAssets) []byte {
+	// sort assets by name
+	sort.Sort(assets)
+	// create name w/ scheme: a-b-...-n
+	name := []byte(assets[0].Symbol)
+	for i, a := range assets {
+		if i > 0 {
+			name += []byte(fmt.Sprintf("-%s", a.Symbol))
+		}
+	}
+	return append(KeyPoolPrefix, name)
 }
+
+func GetPoolKeyFromPoolName(poolName string) []byte {
+	return append(KeyPoolPrefix,[]byte(poolName))
+}
+
+func GetProviderKey(poolName string, creator string) []byte {
+	// return []byte of pool prefix, symbol, creator
+	return append(KeyProviderPrefix([]byte(append(poolName, creator))))
+}
+
+

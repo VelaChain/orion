@@ -35,18 +35,18 @@ message LiquidityProviders {
 message PoolAsset {
 	// symbol contains denom
 	string symbol = 1 [	
-		(gogoproto.moretags) = "yaml:\"asset_symbol\"" 
+		(gogoproto.moretags) = "yaml:\"PoolAsset_symbol\"" 
 	];
-	// skd.Uint amout of pool asset
+	// skd.Int amout of pool asset
 	string amount = 2 [
-		(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+		(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
 		(gogoproto.nullable) = false,
-		(gogoproto.moretags) = "yaml:\"asset_amount\""
+		(gogoproto.moretags) = "yaml:\"PoolAsset_amount\""
 	];
 }
 
 message PoolAssets {
-	repeated PoolAsset a = 1 [
+	repeated PoolAsset pa = 1 [
 		(gogoproto.customname) = "Assets",
 		(gogoproto.nullable) = false,
 		(gogoproto.moretags) = "yaml:\"PoolAsset_assets\""
@@ -60,7 +60,7 @@ message PoolShares {
 	]; 
 	// amount of shares
 	string amount = 2 [
-		(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+		(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
 		(gogoproto.nullable) = false,
 		(gogoproto.moretags) = "yaml:\"PoolShares_amount\""
 	];
@@ -72,7 +72,7 @@ message Pool {
 	// in a lexigraphical ordering
 	string id = 1 [
 		(gogoproto.customname) = "PoolId",
-		(gogoproto.moretags) = "yaml:\"Pool_id\""
+		(gogoproto.moretags) = "yaml:\"Pool_PoolId\""
 	];
 	// pool number (number of pools when pool is created)
 	uint64 number = 2 [
@@ -85,7 +85,7 @@ message Pool {
 		(gogoproto.moretags) = "yaml:\"Pool_assets\"" 
 	];
 	// pool shares live in chain (minted and not yet burned)
-	chios.PoolShares poolShares = 4 [
+	PoolShares poolShares = 4 [
 		(gogoproto.customname) = "Shares",
 		(gogoproto.nullable) = false,
 		(gogoproto.moretags) = "yaml:\"Pool_shares\""
@@ -102,7 +102,7 @@ message Pool {
 	// TODO figure out how fee (charged in native tokens) should
 	// be determined for a pool between two external tokens
 	string swapFee = 6 [
-		(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+		(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
 		(gogoproto.nullable) = false,
 		(gogoproto.moretags) = "yaml:\"Pool_swapFee\""
 	];
@@ -110,7 +110,7 @@ message Pool {
 	// TODO determine how fee is paid - could burn % before
 	// exchanging shares for assets
 	string exitFee = 7 [
-		(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+		(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
  		(gogoproto.nullable) = false,
 		(gogoproto.moretags) = "yaml:\"Pool_exitFee\""
 	];

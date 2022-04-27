@@ -1,12 +1,17 @@
 import { txClient, queryClient, MissingWalletError , registry} from './module'
 
-import { LiquidityProvider } from "./module/types/chios/liquidity_provider"
 import { ChiosPacketData } from "./module/types/chios/packet"
 import { NoData } from "./module/types/chios/packet"
 import { Params } from "./module/types/chios/params"
+import { LiquidityProvider } from "./module/types/chios/types"
+import { LiquidityProviders } from "./module/types/chios/types"
+import { PoolAsset } from "./module/types/chios/types"
+import { PoolAssets } from "./module/types/chios/types"
+import { PoolShares } from "./module/types/chios/types"
+import { Pool } from "./module/types/chios/types"
 
 
-export { LiquidityProvider, ChiosPacketData, NoData, Params };
+export { ChiosPacketData, NoData, Params, LiquidityProvider, LiquidityProviders, PoolAsset, PoolAssets, PoolShares, Pool };
 
 async function initTxClient(vuexGetters) {
 	return await txClient(vuexGetters['common/wallet/signer'], {
@@ -47,10 +52,15 @@ const getDefaultState = () => {
 				Params: {},
 				
 				_Structure: {
-						LiquidityProvider: getStructure(LiquidityProvider.fromPartial({})),
 						ChiosPacketData: getStructure(ChiosPacketData.fromPartial({})),
 						NoData: getStructure(NoData.fromPartial({})),
 						Params: getStructure(Params.fromPartial({})),
+						LiquidityProvider: getStructure(LiquidityProvider.fromPartial({})),
+						LiquidityProviders: getStructure(LiquidityProviders.fromPartial({})),
+						PoolAsset: getStructure(PoolAsset.fromPartial({})),
+						PoolAssets: getStructure(PoolAssets.fromPartial({})),
+						PoolShares: getStructure(PoolShares.fromPartial({})),
+						Pool: getStructure(Pool.fromPartial({})),
 						
 		},
 		_Registry: registry,
