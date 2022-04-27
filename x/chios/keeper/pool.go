@@ -30,7 +30,7 @@ func (k Keeper) GetPool(ctx sdk.Context, poolName string) (types.Pool, error) {
 	var pool types.Pool
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetPoolKeyFromPoolName(poolName)
-	if !k.Exists(ctx, key) {
+	if !store.Has(key) {
 		// TODO add to errors
 		return pool, errors.New("Pool DNE")
 	}
@@ -40,12 +40,12 @@ func (k Keeper) GetPool(ctx sdk.Context, poolName string) (types.Pool, error) {
 }
 
 func (k Keeper) SafeRemovePool(ctx sdk.Context, poolName string) error {
-	p, err := k.GetPool(ctx, poolName)
+	_, err := k.GetPool(ctx, poolName)
 	if err != nil {
 		return err
 	}
-	var remainingBalance sdk.Int
-	iterator := k.GetProviderIterator(ctx)
+	//var remainingBalance sdk.Int
+	iterator := k.GetProvidersIterator(ctx, poolName)
 	defer func(iterator sdk.Iterator) {
 		err := iterator.Close()
 		if err != nil {
@@ -54,17 +54,26 @@ func (k Keeper) SafeRemovePool(ctx sdk.Context, poolName string) error {
 	}(iterator)
 	for ; iterator.Valid(); iterator.Next() {
 		var lp types.LiquidityProvider
-		bytesVal := iterator.Valid()
+		bytesVal := iterator.Value()
 		k.cdc.MustUnmarshal(bytesVal, &lp)
-		if lp.
+		if !lp.Liquidity.Amount.IsZero() {
+			// TODO add to errors
+			return errors.New("pool still has liquidity")
+		}
 	}
+
+	if err := k.RemovePool(ctx, poolName); err != nil {
+		return err
+	}
+
+	return nil
 }
  
 // DOES NOT CHECK FOR REMAINING LIQUIDITY - must check before
 func (k Keeper) RemovePool(ctx sdk.Context, poolName string) error {
 	store := ctx.KVStore(k.storeKey)
-	key := type.GetPoolKeyFromPoolName(poolName)
-	if !k.Exists(ctx, key) {
+	key := types.GetPoolKeyFromPoolName(poolName)
+	if !store.Has(key) {
 		// TODO add to errors
 		return errors.New("Pool DNE")
 	}
@@ -74,7 +83,7 @@ func (k Keeper) RemovePool(ctx sdk.Context, poolName string) error {
 
 func (k Keeper) GetPools(ctx sdk.Context) []*types.Pool {
 	var pools []*types.Pool
-	Iterator := k.GetPoolsInterator(ctx)
+	iterator := k.GetPoolsIterator(ctx)
 	defer func(iterator sdk.Iterator){
 		err := iterator.Close()
 		if err != nil {
@@ -91,9 +100,9 @@ func (k Keeper) GetPools(ctx sdk.Context) []*types.Pool {
 }
 
 func (k Keeper) GetPoolsPaginated(ctx sdk.Context, pagination *query.PageRequest) ([]*types.Pool, *query.PageResponse, error) {
-	var pools []*type.Pool
+	var pools []*types.Pool
 	store := ctx.KVStore(k.storeKey)
-	poolStore := prefix.NewStore(store, type.KeyPoolPrefix)
+	poolStore := prefix.NewStore(store, types.KeyPoolPrefix)
 	pageRes, err := query.Paginate(poolStore, pagination, func (key []byte, value []byte) error {
 		var pool types.Pool
 		err := k.cdc.Unmarshal(value, &pool)

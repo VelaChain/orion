@@ -1,13 +1,11 @@
 package types
 
 import(
-	"strings"
+	//"strings"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	//sdk "github.com/cosmos/cosmos-sdk/types"
+	//authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
-
-type PoolAssets []PoolAsset
 
 // TODO 
 func (pa PoolAsset) Validate() bool {
@@ -21,5 +19,6 @@ func (pa PoolAssets) Validate() bool {
 
 // TODO
 func (ps PoolShares) Validate() bool {
-
+	return true
 }
+

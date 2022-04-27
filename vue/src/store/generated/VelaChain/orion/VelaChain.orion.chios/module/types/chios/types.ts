@@ -26,7 +26,7 @@ export interface PoolAsset {
 }
 
 export interface PoolAssets {
-  a: PoolAsset[];
+  pa: PoolAsset[];
 }
 
 export interface PoolShares {
@@ -312,7 +312,7 @@ const basePoolAssets: object = {};
 
 export const PoolAssets = {
   encode(message: PoolAssets, writer: Writer = Writer.create()): Writer {
-    for (const v of message.a) {
+    for (const v of message.pa) {
       PoolAsset.encode(v!, writer.uint32(10).fork()).ldelim();
     }
     return writer;
@@ -322,12 +322,12 @@ export const PoolAssets = {
     const reader = input instanceof Uint8Array ? new Reader(input) : input;
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = { ...basePoolAssets } as PoolAssets;
-    message.a = [];
+    message.pa = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.a.push(PoolAsset.decode(reader, reader.uint32()));
+          message.pa.push(PoolAsset.decode(reader, reader.uint32()));
           break;
         default:
           reader.skipType(tag & 7);
@@ -339,10 +339,10 @@ export const PoolAssets = {
 
   fromJSON(object: any): PoolAssets {
     const message = { ...basePoolAssets } as PoolAssets;
-    message.a = [];
-    if (object.a !== undefined && object.a !== null) {
-      for (const e of object.a) {
-        message.a.push(PoolAsset.fromJSON(e));
+    message.pa = [];
+    if (object.pa !== undefined && object.pa !== null) {
+      for (const e of object.pa) {
+        message.pa.push(PoolAsset.fromJSON(e));
       }
     }
     return message;
@@ -350,20 +350,20 @@ export const PoolAssets = {
 
   toJSON(message: PoolAssets): unknown {
     const obj: any = {};
-    if (message.a) {
-      obj.a = message.a.map((e) => (e ? PoolAsset.toJSON(e) : undefined));
+    if (message.pa) {
+      obj.pa = message.pa.map((e) => (e ? PoolAsset.toJSON(e) : undefined));
     } else {
-      obj.a = [];
+      obj.pa = [];
     }
     return obj;
   },
 
   fromPartial(object: DeepPartial<PoolAssets>): PoolAssets {
     const message = { ...basePoolAssets } as PoolAssets;
-    message.a = [];
-    if (object.a !== undefined && object.a !== null) {
-      for (const e of object.a) {
-        message.a.push(PoolAsset.fromPartial(e));
+    message.pa = [];
+    if (object.pa !== undefined && object.pa !== null) {
+      for (const e of object.pa) {
+        message.pa.push(PoolAsset.fromPartial(e));
       }
     }
     return message;

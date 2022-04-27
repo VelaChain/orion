@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/VelaChain/orion/x/chios/type"
+	"github.com/VelaChain/orion/x/chios/types"
 	"errors"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -25,7 +25,7 @@ func (k Keeper) GetLiqProv(ctx sdk.Context, poolName string, lpAddr string) (typ
 	var lp types.LiquidityProvider
 	key := types.GetProviderKey(poolName, lpAddr)
 	store := ctx.KVStore(k.storeKey)
-	if !k.Exists(ctx, key) {
+	if !store.Has(key) {
 		// TODO add to errors
 		return lp, errors.New("LP DNE")
 	}
@@ -35,32 +35,34 @@ func (k Keeper) GetLiqProv(ctx sdk.Context, poolName string, lpAddr string) (typ
 	return lp, nil
 }
 
-func (k Keeper) RemoveLiqPro(ctx sdk.Context, poolName string, lpAddr string) bool {
+func (k Keeper) RemoveLiqPro(ctx sdk.Context, poolName string, lpAddr string) (bool, error) {
+	var lp types.LiquidityProvider
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetProviderKey(poolName, lpAddr)
-	if !k.Exists(ctx, key) {
+	if !store.Has(key) {
 		// TODO add to errors
-		return lp, errors.New("LP DNE")
+		return false, errors.New("LP DNE")
 	}
 
 	bz := store.Get(key)
 	k.cdc.MustUnmarshal(bz, &lp)
-	if lp.Liquidity.IsNegative() {
+	if lp.Liquidity.Amount.IsNegative() {
 		// TODO add to errors
-		return lp, errors.New("Provider has negative liquidity")
+		return false, errors.New("Provider has negative liquidity")
 	}
-	if !lp.Liquidity.IsZero() {
+	if !lp.Liquidity.Amount.IsZero() {
 		// TODO add to errors
-		return lp, errors.New("Provider still has liquidity")
+		return false, errors.New("Provider still has liquidity")
 	}
 	
 	store.Delete(key)
+	return true, nil
 }
 
 // returns providers for a given pool
-func (k Keeper) GetProviders(ctx sdk.Context, poolName string) []*types.LiquidityProvider, error {
+func (k Keeper) GetProviders(ctx sdk.Context, poolName string) ([]*types.LiquidityProvider, error) {
 	var providers []*types.LiquidityProvider
-	iterator := k.GetProviderIterator(ctx, poolName)
+	iterator := k.GetProvidersIterator(ctx, poolName)
 	defer func(iterator sdk.Iterator){
 		err := iterator.Close()
 		if err != nil {
@@ -89,6 +91,7 @@ func (k Keeper) GetAllProviders(ctx sdk.Context) []*types.LiquidityProvider {
 			panic(err)
 		}
 	}(iterator)
+	for ; iterator.Valid(); iterator.Next() {
 		var lp types.LiquidityProvider
 		bytesVal := iterator.Value()
 		k.cdc.MustUnmarshal(bytesVal, &lp)
@@ -102,7 +105,7 @@ func (k Keeper) GetProvidersPaginated(ctx sdk.Context, poolName string, paginati
 	var providers []*types.LiquidityProvider
 	store := ctx.KVStore(k.storeKey)
 	provStore := prefix.NewStore(store, types.GetProvidersKey(poolName))
-	pageRes, err := query.Paginate(provStore, pagination, func(key []byte, value []byte){
+	pageRes, err := query.Paginate(provStore, pagination, func(key []byte, value []byte) error{
 		var  lp types.LiquidityProvider
 		err := k.cdc.Unmarshal(value, &lp)
 		if err != nil {
@@ -121,7 +124,7 @@ func (k Keeper) GetAllProvidersPaginated(ctx sdk.Context, pagination *query.Page
 	var providers []*types.LiquidityProvider
 	store := ctx.KVStore(k.storeKey)
 	provStore := prefix.NewStore(store, types.KeyProviderPrefix)
-	pageRes, err := query.Paginate(provStore, pagination, func(key []byte, value []byte){
+	pageRes, err := query.Paginate(provStore, pagination, func(key []byte, value []byte) error{
 		var lp types.LiquidityProvider
 		err := k.cdc.Unmarshal(value, &lp)
 		if err != nil {

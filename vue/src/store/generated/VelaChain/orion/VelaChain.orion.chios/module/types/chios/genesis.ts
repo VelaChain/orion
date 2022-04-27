@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { Params } from "../chios/params";
-import { Pool, LiquidityProvider } from "../chios/types";
+import { Pool, LiquidityProviders } from "../chios/types";
 import { Writer, Reader } from "protobufjs/minimal";
 
 export const protobufPackage = "VelaChain.orion.chios";
@@ -11,7 +11,7 @@ export interface GenesisState {
   port_id: string;
   pool_list: Pool[];
   /** this line is used by starport scaffolding # genesis/proto/state */
-  providers: LiquidityProvider[];
+  providers: LiquidityProviders[];
 }
 
 const baseGenesisState: object = { port_id: "" };
@@ -28,7 +28,7 @@ export const GenesisState = {
       Pool.encode(v!, writer.uint32(26).fork()).ldelim();
     }
     for (const v of message.providers) {
-      LiquidityProvider.encode(v!, writer.uint32(34).fork()).ldelim();
+      LiquidityProviders.encode(v!, writer.uint32(34).fork()).ldelim();
     }
     return writer;
   },
@@ -53,7 +53,7 @@ export const GenesisState = {
           break;
         case 4:
           message.providers.push(
-            LiquidityProvider.decode(reader, reader.uint32())
+            LiquidityProviders.decode(reader, reader.uint32())
           );
           break;
         default:
@@ -85,7 +85,7 @@ export const GenesisState = {
     }
     if (object.providers !== undefined && object.providers !== null) {
       for (const e of object.providers) {
-        message.providers.push(LiquidityProvider.fromJSON(e));
+        message.providers.push(LiquidityProviders.fromJSON(e));
       }
     }
     return message;
@@ -105,7 +105,7 @@ export const GenesisState = {
     }
     if (message.providers) {
       obj.providers = message.providers.map((e) =>
-        e ? LiquidityProvider.toJSON(e) : undefined
+        e ? LiquidityProviders.toJSON(e) : undefined
       );
     } else {
       obj.providers = [];
@@ -134,7 +134,7 @@ export const GenesisState = {
     }
     if (object.providers !== undefined && object.providers !== null) {
       for (const e of object.providers) {
-        message.providers.push(LiquidityProvider.fromPartial(e));
+        message.providers.push(LiquidityProviders.fromPartial(e));
       }
     }
     return message;

@@ -1,5 +1,12 @@
 package types
 
+import (
+	"sort"
+	"fmt"
+
+	//sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "chios"
@@ -37,34 +44,37 @@ var (
 	KeyPoolCount = []byte{0x03}
 )
 
-func GetPoolKeyFromAssets(assets PoolAssets) []byte {
+func GetPoolKeyFromAssets(pa PoolAssets) []byte {
 	// sort assets by name
-	sort.Sort(assets)
+	sort.Sort(pa)
 	// create name w/ scheme: a-b-...-n
-	name := []byte(assets[0].Symbol)
-	for i, a := range assets {
+	name := []byte(pa.Assets[0].Symbol)
+	for i, a := range pa.Assets {
 		if i > 0 {
-			name += []byte(fmt.Sprintf("-%s", a.Symbol))
+			name = append(name, []byte(fmt.Sprintf("-%s", a.Symbol))...)
 		}
 	}
-	return append(KeyPoolPrefix, name)
+	return append(KeyPoolPrefix, name...)
 }
 
 func GetPoolKeyFromPoolName(poolName string) []byte {
-	return append(KeyPoolPrefix,[]byte(poolName))
+	poolKeyByte := []byte(fmt.Sprintf("-%s", poolName))
+	return append(KeyPoolPrefix, poolKeyByte...)
 }
 
 // key for specific provider in a given pool
 // use this key for adding a liquidity provider
 func GetProviderKey(poolName string, creator string) []byte {
 	// return []byte of pool prefix, symbol, creator
-	return append( KeyProviderPrefix, []byte( append( poolName, creator ) ) )
+	provKeyByte := []byte(fmt.Sprintf("/%s/%s", poolName, creator))
+	return append( KeyProviderPrefix, provKeyByte... )
 }
 
 // key for provider all providers in a given pool
 // use this key to get providers for pool from providers store
 func GetProvidersKey(poolName string) [] byte {
-	return append(KeyProviderPrefix, []byte(poolName) )
+	provKeyByte := []byte(fmt.Sprintf("/%s", poolName))
+	return append(KeyProviderPrefix, provKeyByte...)
 }
 
 
