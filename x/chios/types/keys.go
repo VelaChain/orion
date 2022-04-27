@@ -54,9 +54,17 @@ func GetPoolKeyFromPoolName(poolName string) []byte {
 	return append(KeyPoolPrefix,[]byte(poolName))
 }
 
+// key for specific provider in a given pool
+// use this key for adding a liquidity provider
 func GetProviderKey(poolName string, creator string) []byte {
 	// return []byte of pool prefix, symbol, creator
-	return append(KeyProviderPrefix([]byte(append(poolName, creator))))
+	return append( KeyProviderPrefix, []byte( append( poolName, creator ) ) )
+}
+
+// key for provider all providers in a given pool
+// use this key to get providers for pool from providers store
+func GetProvidersKey(poolName string) [] byte {
+	return append(KeyProviderPrefix, []byte(poolName) )
 }
 
 

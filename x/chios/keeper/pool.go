@@ -39,14 +39,37 @@ func (k Keeper) GetPool(ctx sdk.Context, poolName string) (types.Pool, error) {
 	return pool, nil
 }
 
-func (k Keeper) RemovePool(ctx sdk.Context, poolName string) errpr {
+func (k Keeper) SafeRemovePool(ctx sdk.Context, poolName string) error {
+	p, err := k.GetPool(ctx, poolName)
+	if err != nil {
+		return err
+	}
+	var remainingBalance sdk.Int
+	iterator := k.GetProviderIterator(ctx)
+	defer func(iterator sdk.Iterator) {
+		err := iterator.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(iterator)
+	for ; iterator.Valid(); iterator.Next() {
+		var lp types.LiquidityProvider
+		bytesVal := iterator.Valid()
+		k.cdc.MustUnmarshal(bytesVal, &lp)
+		if lp.
+	}
+}
+ 
+// DOES NOT CHECK FOR REMAINING LIQUIDITY - must check before
+func (k Keeper) RemovePool(ctx sdk.Context, poolName string) error {
 	store := ctx.KVStore(k.storeKey)
 	key := type.GetPoolKeyFromPoolName(poolName)
 	if !k.Exists(ctx, key) {
 		// TODO add to errors
 		return errors.New("Pool DNE")
 	}
-		
+	store.Delete(key)
+	return nil	
 }
 
 func (k Keeper) GetPools(ctx sdk.Context) []*types.Pool {
@@ -86,7 +109,12 @@ func (k Keeper) GetPoolsPaginated(ctx sdk.Context, pagination *query.PageRequest
 	return pools, pageRes, nil
 }
 
-func (k Keeper) GetPoolsInterator(ctx sdk.Context) sdk.Iterator {
+func (k Keeper) GetAllPoolsIterator(ctx sdk.Context) sdk.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	return sdk.KVStorePrefixIterator(store, types.KeyPoolPrefix)
+}
+
+// TODO
+func (k Keeper) RemoveLiquidityProvider(ctx sdk.Context, lpAddr string) error {
+	return nil
 }

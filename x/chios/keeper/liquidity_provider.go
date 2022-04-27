@@ -57,9 +57,10 @@ func (k Keeper) RemoveLiqPro(ctx sdk.Context, poolName string, lpAddr string) bo
 	store.Delete(key)
 }
 
-func (k Keeper) GetProviders(ctx sdk.Context) []*types.LiquidityProvider {
+// returns providers for a given pool
+func (k Keeper) GetProviders(ctx sdk.Context, poolName string) []*types.LiquidityProvider, error {
 	var providers []*types.LiquidityProvider
-	iterator := k.GetProviderIterator(ctx)
+	iterator := k.GetProviderIterator(ctx, poolName)
 	defer func(iterator sdk.Iterator){
 		err := iterator.Close()
 		if err != nil {
@@ -70,18 +71,40 @@ func (k Keeper) GetProviders(ctx sdk.Context) []*types.LiquidityProvider {
 		var lp types.LiquidityProvider
 		bytesVal := iterator.Value()
 		k.cdc.MustUnmarshal(bytesVal, &lp)
+		if lp.Liquidity.Symbol != poolName {
+			// TODO add to errors
+			return providers, errors.New("Iterator returned provider from different pool")
+		}
+		providers = append(providers, &lp)
+	}
+	return providers, nil
+}
+
+func (k Keeper) GetAllProviders(ctx sdk.Context) []*types.LiquidityProvider {
+	var providers []*types.LiquidityProvider
+	iterator := k.GetAllProvidersIterator(ctx)
+	defer func(iterator sdk.Iterator){
+		err := iterator.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(iterator)
+		var lp types.LiquidityProvider
+		bytesVal := iterator.Value()
+		k.cdc.MustUnmarshal(bytesVal, &lp)
 		providers = append(providers, &lp)
 	}
 	return providers
 }
 
-func (k Keeper) GetProvidersPaginated(ctx sdk.Context, pagination *query.PageRequest) ([]*types.LiquidityProvider, *query.PageResponse, error) {
+// returns providers from a given pool
+func (k Keeper) GetProvidersPaginated(ctx sdk.Context, poolName string, pagination *query.PageRequest) ([]*types.LiquidityProvider, *query.PageResponse, error) {
 	var providers []*types.LiquidityProvider
 	store := ctx.KVStore(k.storeKey)
-	provStore := prefix.NewStore(store, types.KeyProviderPrefix)
+	provStore := prefix.NewStore(store, types.GetProvidersKey(poolName))
 	pageRes, err := query.Paginate(provStore, pagination, func(key []byte, value []byte){
 		var  lp types.LiquidityProvider
-		err := k.cdc.Unmarshal(value, &pool)
+		err := k.cdc.Unmarshal(value, &lp)
 		if err != nil {
 			return err
 		} 
@@ -94,7 +117,34 @@ func (k Keeper) GetProvidersPaginated(ctx sdk.Context, pagination *query.PageReq
 	return providers, pageRes, nil
 }
 
-func (k Keeper) GetProviderIterator(ctx sdk.Context) sdk.Iterator {
+func (k Keeper) GetAllProvidersPaginated(ctx sdk.Context, pagination *query.PageRequest) ([]*types.LiquidityProvider, *query.PageResponse, error) {
+	var providers []*types.LiquidityProvider
 	store := ctx.KVStore(k.storeKey)
-	return sdk.KVStorePrefixIterator(store, types.KeyPoolPrefix)
+	provStore := prefix.NewStore(store, types.KeyProviderPrefix)
+	pageRes, err := query.Paginate(provStore, pagination, func(key []byte, value []byte){
+		var lp types.LiquidityProvider
+		err := k.cdc.Unmarshal(value, &lp)
+		if err != nil {
+			return err
+		}
+		providers = append(providers, &lp)
+		return nil
+	})
+	if err != nil {
+		return nil, &query.PageResponse{}, status.Error(codes.Internal, err.Error())
+	}
+	return providers, pageRes, nil
 }
+
+// iterator for all providers for all pools
+func (k Keeper) GetAllProvidersIterator(ctx sdk.Context) sdk.Iterator {
+	store := ctx.KVStore(k.storeKey)
+	return sdk.KVStorePrefixIterator(store, types.KeyProviderPrefix)
+}
+
+// iterator for all providers for a specific pool
+func (k Keeper) GetProvidersIterator(ctx sdk.Context, poolName string) sdk.Iterator {
+	store := ctx.KVStore(k.storeKey)
+	return sdk.KVStorePrefixIterator(store, types.GetProvidersKey(poolName))
+}
+
