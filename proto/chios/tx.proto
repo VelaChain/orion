@@ -1,6 +1,8 @@
 syntax = "proto3";
 package VelaChain.orion.chios;
 
+import "gogoproto/gogo.proto";
+import "chios/types.proto";
 // this line is used by starport scaffolding # proto/tx/import
 
 option go_package = "github.com/VelaChain/orion/x/chios/types";
@@ -9,24 +11,139 @@ option go_package = "github.com/VelaChain/orion/x/chios/types";
 service Msg {
     // this line is used by starport scaffolding # proto/tx/rpc
     
-    // CreatePool defines a method for creating a pool
-    rpc CreatePool(MsgCreatePool) returns (MsgSendResponse);
+    // CreatePairPool defines a method for creating a pool for two assets
+    rpc CreatePairPool(MsgCreatePairPool) returns (MsgCreatePairPoolResponse);
 
-    // JoinPool defines a method for joining an existing pool
-    rpc JoinPool(MsgJoinPool) returns (MsgJoinPoolResponse);
+    // JoinPairPool defines a method for joining an existing pool
+    rpc JoinPairPool(MsgJoinPairPool) returns (MsgJoinPairPoolResponse);
     
-    // ExitPool defines a method for entirely leaving a pool
-    rpc ExitPool(MsgExitPool) returns (MsgExitPoolResponse);
+    // ExitPairPool defines a method for entirely leaving a pool
+    rpc ExitPairPool(MsgExitPairPool) returns (MsgExitPairPoolResponse);
 
-    // Swap defines a method for swapping two assets using a pool
-    rpc Swap(MsgSwap) returns (MsgSwapResponse);
+    // SwapPair defines a method for swapping two assets using a PairPool
+    rpc SwapPair(MsgSwapPair) returns (MsgSwapPairResponse);
 
-    // AddLiquidity defines a method for adding liquidity to a pool for an existing provider
-    rpc AddLiquidity(MsgAddLiquidity) returns (MsgAddLiquidityResponse);
+    // AddLiquidityPair defines a method for adding liquidity to a PairPool for an existing provider
+    rpc AddLiquidityPair(MsgAddLiquidityPair) returns (MsgAddLiquidityPairResponse);
     
-    // RemoveLiquidity defines a method for removing some liquidity from a pool but not all
-    rpc RemoveLiquidity(MsgRemoveLiquidity) returns (MsgRemoveLiquidityResponse);
+    // RemoveLiquidityPair defines a method for removing some liquidity from a PairPool but not all
+    rpc RemoveLiquidityPair(MsgRemoveLiquidityPair) returns (MsgRemoveLiquidityPairResponse);
 
 }
 
 // this line is used by starport scaffolding # proto/tx/message
+message MsgCreatePairPool {
+    string creator = 1;
+    string denomA = 2;
+    string amountA = 3 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.nullable) = false
+    ];
+    string denomB = 4;
+    string amountB = 5 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.nullable) = false
+    ];
+    string sharesOut =  6 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.nullable) = false
+    ];
+}
+
+message MsgCreatePairPoolResponse {
+    string poolId = 1;
+    chios.PoolShares shares = 2 [(gogoproto.nullable) = false];
+}
+
+message MsgJoinPairPool {
+    string creator = 1;
+    string denomA = 2; 
+    string amountA = 3 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.nullable) = false
+    ];
+    string denomB = 4;
+    string amountB = 5 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.nullable) = false
+    ];
+    string sharesOut =  6 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.nullable) = false
+    ];
+
+}
+
+message MsgJoinPairPoolResponse {
+    string poolId = 1;
+    chios.PoolShares shares = 2 [(gogoproto.nullable) = false];
+}
+
+message MsgExitPairPool {
+    string creator = 1;
+    string poolId = 2;
+}
+
+message MsgExitPairPoolResponse {
+    string poolId = 1;
+    chios.PoolShares remainingShares = 2 [(gogoproto.nullable) = false];
+}
+
+message MsgSwapPair {
+    string creator = 1;
+    string denomIn = 2; 
+    string amountIn = 3 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.nullable) = false
+    ];
+    string denomOut = 4;
+    string minAmountOut = 5 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.nullable) = false
+    ];
+}
+
+message MsgSwapPairResponse {
+    string creator = 1;
+    chios.PoolAsset assetOut = 2 [(gogoproto.nullable) = false]; 
+}
+
+message MsgAddLiquidityPair {
+    string creator = 1;
+    string denomA = 2; 
+    string amountA = 3 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.nullable) = false
+    ];
+    string denomB = 4;
+    string amountB = 5 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.nullable) = false
+    ];
+    string sharesOut =  6 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.nullable) = false
+    ];
+}
+
+message MsgAddLiquidityPairResponse {
+    string poolId = 1;
+    chios.PoolShares shares = 2 [ (gogoproto.nullable) = false ];
+}
+
+message MsgRemoveLiquidityPair {
+    string creator = 1;
+    string sharesDenom = 2;
+    string sharesAmount = 3 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.nullable) = false
+    ];
+
+}
+
+message MsgRemoveLiquidityPairResponse {
+    string creator = 1;
+    chios.PoolAsset assetA = 2;
+    chios.PoolAsset assetB = 3;
+}
+
