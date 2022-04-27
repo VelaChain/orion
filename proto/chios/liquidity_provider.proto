@@ -1,0 +1,12 @@
+syntax = "proto3";
+package VelaChain.orion.chios;
+
+option go_package = "github.com/VelaChain/orion/x/chios/types";
+
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+message LiquidityProvider {
+  string address = 1; 
+  cosmos.base.v1beta1.Coins = 2 [(gogoproto.nullable) = false]; 
+}

@@ -96,6 +96,12 @@ import (
 	monitoringptypes "github.com/tendermint/spn/x/monitoringp/types"
 
 	"github.com/VelaChain/orion/docs"
+	ammmodule "github.com/VelaChain/orion/x/amm"
+	ammmodulekeeper "github.com/VelaChain/orion/x/amm/keeper"
+	ammmoduletypes "github.com/VelaChain/orion/x/amm/types"
+	chiosmodule "github.com/VelaChain/orion/x/chios"
+	chiosmodulekeeper "github.com/VelaChain/orion/x/chios/keeper"
+	chiosmoduletypes "github.com/VelaChain/orion/x/chios/types"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 )
 
@@ -149,6 +155,8 @@ var (
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		monitoringp.AppModuleBasic{},
+		ammmodule.AppModuleBasic{},
+		chiosmodule.AppModuleBasic{},
 		// this line is used by starport scaffolding # stargate/app/moduleBasic
 	)
 
@@ -161,6 +169,8 @@ var (
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
+		ammmoduletypes.ModuleName:      {authtypes.Minter, authtypes.Burner, authtypes.Staking},
+		chiosmoduletypes.ModuleName:    {authtypes.Minter, authtypes.Burner, authtypes.Staking},
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 )
@@ -220,6 +230,10 @@ type App struct {
 	ScopedTransferKeeper   capabilitykeeper.ScopedKeeper
 	ScopedMonitoringKeeper capabilitykeeper.ScopedKeeper
 
+	ScopedAmmKeeper   capabilitykeeper.ScopedKeeper
+	AmmKeeper         ammmodulekeeper.Keeper
+	ScopedChiosKeeper capabilitykeeper.ScopedKeeper
+	ChiosKeeper       chiosmodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// mm is the module manager
@@ -256,6 +270,8 @@ func New(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey, monitoringptypes.StoreKey,
+		ammmoduletypes.StoreKey,
+		chiosmoduletypes.StoreKey,
 		// this line is used by starport scaffolding # stargate/app/storeKey
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -369,12 +385,48 @@ func New(
 	)
 	monitoringModule := monitoringp.NewAppModule(appCodec, app.MonitoringKeeper)
 
+	scopedAmmKeeper := app.CapabilityKeeper.ScopeToModule(ammmoduletypes.ModuleName)
+	app.ScopedAmmKeeper = scopedAmmKeeper
+	app.AmmKeeper = *ammmodulekeeper.NewKeeper(
+		appCodec,
+		keys[ammmoduletypes.StoreKey],
+		keys[ammmoduletypes.MemStoreKey],
+		app.GetSubspace(ammmoduletypes.ModuleName),
+		app.IBCKeeper.ChannelKeeper,
+		&app.IBCKeeper.PortKeeper,
+		scopedAmmKeeper,
+		app.BankKeeper,
+		app.AccountKeeper,
+		app.DistrKeeper,
+		app.MintKeeper,
+	)
+	ammModule := ammmodule.NewAppModule(appCodec, app.AmmKeeper, app.AccountKeeper, app.BankKeeper)
+
+	scopedChiosKeeper := app.CapabilityKeeper.ScopeToModule(chiosmoduletypes.ModuleName)
+	app.ScopedChiosKeeper = scopedChiosKeeper
+	app.ChiosKeeper = *chiosmodulekeeper.NewKeeper(
+		appCodec,
+		keys[chiosmoduletypes.StoreKey],
+		keys[chiosmoduletypes.MemStoreKey],
+		app.GetSubspace(chiosmoduletypes.ModuleName),
+		app.IBCKeeper.ChannelKeeper,
+		&app.IBCKeeper.PortKeeper,
+		scopedChiosKeeper,
+		app.BankKeeper,
+		app.AccountKeeper,
+		app.DistrKeeper,
+		app.MintKeeper,
+	)
+	chiosModule := chiosmodule.NewAppModule(appCodec, app.ChiosKeeper, app.AccountKeeper, app.BankKeeper)
+
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := ibcporttypes.NewRouter()
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferModule)
 	ibcRouter.AddRoute(monitoringptypes.ModuleName, monitoringModule)
+	ibcRouter.AddRoute(ammmoduletypes.ModuleName, ammModule)
+	ibcRouter.AddRoute(chiosmoduletypes.ModuleName, chiosModule)
 	// this line is used by starport scaffolding # ibc/app/router
 	app.IBCKeeper.SetRouter(ibcRouter)
 
@@ -409,6 +461,8 @@ func New(
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
 		monitoringModule,
+		ammModule,
+		chiosModule,
 		// this line is used by starport scaffolding # stargate/app/appModule
 	)
 
@@ -435,6 +489,8 @@ func New(
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
 		monitoringptypes.ModuleName,
+		ammmoduletypes.ModuleName,
+		chiosmoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/beginBlockers
 	)
 
@@ -457,6 +513,8 @@ func New(
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
 		monitoringptypes.ModuleName,
+		ammmoduletypes.ModuleName,
+		chiosmoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/endBlockers
 	)
 
@@ -484,6 +542,8 @@ func New(
 		ibctransfertypes.ModuleName,
 		feegrant.ModuleName,
 		monitoringptypes.ModuleName,
+		ammmoduletypes.ModuleName,
+		chiosmoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	)
 
@@ -507,6 +567,8 @@ func New(
 		ibc.NewAppModule(app.IBCKeeper),
 		transferModule,
 		monitoringModule,
+		ammModule,
+		chiosModule,
 		// this line is used by starport scaffolding # stargate/app/appModule
 	)
 	app.sm.RegisterStoreDecoders()
@@ -696,6 +758,8 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	paramsKeeper.Subspace(monitoringptypes.ModuleName)
+	paramsKeeper.Subspace(ammmoduletypes.ModuleName)
+	paramsKeeper.Subspace(chiosmoduletypes.ModuleName)
 	// this line is used by starport scaffolding # stargate/app/paramSubspace
 
 	return paramsKeeper
