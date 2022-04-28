@@ -143,7 +143,6 @@ message MsgRemoveLiquidityPair {
 
 message MsgRemoveLiquidityPairResponse {
     string creator = 1;
-    chios.PoolAsset assetA = 2;
-    chios.PoolAsset assetB = 3;
+    chios.PoolAssets assets = 2;
 }
 
