@@ -86,7 +86,7 @@ message MsgExitPairPool {
 
 message MsgExitPairPoolResponse {
     string poolId = 1;
-    chios.PoolShares remainingShares = 2 [(gogoproto.nullable) = false];
+    chios.PoolAssets assets = 2 [(gogoproto.nullable) = false];    
 }
 
 message MsgSwapPair {

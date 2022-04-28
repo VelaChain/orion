@@ -44,17 +44,34 @@ var (
 	KeyPoolCount = []byte{0x03}
 )
 
-func GetPoolKeyFromAssets(pa PoolAssets) []byte {
+func PrefixKey(key string) []byte {
+	return []byte(key)
+} 
+
+// func GetPoolKeyFromAssets(pa PoolAssets) []byte {
+// 	// sort assets by name
+// 	sort.Sort(pa)
+// 	// create name w/ scheme: a-b-...-n
+// 	name := []byte(pa.Assets[0].Symbol)
+// 	for i, a := range pa.Assets {
+// 		if i > 0 {
+// 			name = append(name, []byte(fmt.Sprintf("-%s", a.Symbol))...)
+// 		}
+// 	}
+// 	return append(KeyPoolPrefix, name...)
+// }
+
+func GetPoolNameFromAssets(pa PoolAssets) string {
 	// sort assets by name
 	sort.Sort(pa)
 	// create name w/ scheme: a-b-...-n
-	name := []byte(pa.Assets[0].Symbol)
+	name := pa.Assets[0].Symbol
 	for i, a := range pa.Assets {
 		if i > 0 {
-			name = append(name, []byte(fmt.Sprintf("-%s", a.Symbol))...)
+			name += fmt.Sprintf("-%s", a.Symbol)
 		}
 	}
-	return append(KeyPoolPrefix, name...)
+	return name
 }
 
 func GetPoolKeyFromPoolName(poolName string) []byte {
@@ -77,4 +94,7 @@ func GetProvidersKey(poolName string) [] byte {
 	return append(KeyProviderPrefix, provKeyByte...)
 }
 
-
+// key for all providers in all pools
+func GetAllProvidersKey() []byte {
+	return KeyProviderPrefix
+}

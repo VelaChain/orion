@@ -22,3 +22,6 @@ func (ps PoolShares) Validate() bool {
 	return true
 }
 
+func CoinFromAsset(asset PoolAsset) sdk.Coin{
+	return sdk.NewCoin(asset.Symbol, asset.Amount)
+}

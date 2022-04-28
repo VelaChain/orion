@@ -24,10 +24,14 @@ func (p Pool) Validate() bool {
 	return true
 }
 
-// TODO
-func HasLiquidity(p Pool) bool {
-	return false
-} 
+
+func NewLiqProviders(lp ...LiquidityProvider) LiquidityProviders {
+	var liqProv LiquidityProvider
+	for _, prov := range lp {
+		liqProv.Providers = append(liqProv.Providers, prov)
+	}
+	return liqProv
+}
 
 // Returns new lp from address and shares
 func NewLiqProvider(creator string, shares PoolShares) LiquidityProvider {
@@ -37,18 +41,21 @@ func NewLiqProvider(creator string, shares PoolShares) LiquidityProvider {
 }
 
 // Returns new pool created by sender w/ given poolId, id assets, shares and default fees
-func NewBasicPool(poolId string, count uint64, assets PoolAssets, shares PoolShares, lps LiquidityProviders) (pool Pool, err error) {
+func NewPairPool(poolId string, assets PoolAssets, shares PoolShares, lps LiquidityProviders) (pool Pool, err error) {
 	p := Pool{PoolId: poolId}
-	p.Number = count
 	p.Assets = assets
 	p.Shares = shares
 	p.Providers = lps
 	p.SwapFee, err = sdk.NewDecFromStr(PoolDefaultFee)
-	p.ExitFee, err = sdk.NewDecFromStr(PoolDefaultFee)
 	if err != nil {
 		// TODO add to errors
 		return pool, err
 	}
+	p.ExitFee, err = sdk.NewDecFromStr(PoolDefaultFee)
+	if err != nil {
+		// TODO add to errors
+		return pool, err
+	}	
 	return p, nil
 }
 
@@ -56,6 +63,14 @@ func NewPoolAsset(symbol string, amount sdk.Int) PoolAsset{
 	pa := PoolAsset{ Symbol:symbol }
 	pa.Amount = amount
 	return pa	
+}
+
+func NewPoolAssets(assets ...PoolAsset) PoolAssets {
+	var pa PoolAssets
+	for _, a := range assets {
+		pa.Assets = append(pa.Assets, a)
+	}
+	return pa 
 }
 
 func NewPoolShares(symbol string, amount sdk.Int) PoolShares{
@@ -66,8 +81,3 @@ func NewPoolShares(symbol string, amount sdk.Int) PoolShares{
 	return ps
 }
 
-// Returns new pool assets
-func NewPoolAssets(a []PoolAsset) PoolAssets {
-	pa := PoolAssets{ Assets: a }
-	return pa
-}

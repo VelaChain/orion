@@ -5,7 +5,7 @@ import (
 
 	"github.com/VelaChain/orion/x/chios/types"
 
-	//sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	//sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	//"github.com/cosmos/cosmos-sdk/types/query"
 )
@@ -24,7 +24,20 @@ var _ types.MsgServer = msgServer{}
 
 // TODO
 func (k msgServer) CreatePairPool(goCtx context.Context, msg *types.MsgCreatePairPool) (*types.MsgCreatePairPoolResponse, error) {
-	return &types.MsgCreatePairPoolResponse{}, nil
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	// TODO make pools meet some min amount
+
+	if k.Has(ctx, types.GetPoolKeyFromPoolName(types.GetPoolNameFromAssets(types.NewPoolAssets(types.NewPoolAsset(msg.DenomA, msg.AmountA), types.NewPoolAsset(msg.DenomB, msg.AmountB))))){
+		// TODO add to errors
+		return &types.MsgCreatePairPoolResponse{}, errors.New("Pool already exists")
+	}
+
+	name, shares, err := k.Keeper.CreatePoolPair(ctx, msg)
+	if err != nil {
+		return &types.MsgCreatePairPoolResponse{}, err
+	}
+
+	return &types.MsgCreatePairPoolResponse{PoolId: name, Shares: shares}, nil
 }
 
 // TODO

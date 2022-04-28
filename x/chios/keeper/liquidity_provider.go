@@ -11,14 +11,16 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) SetLiqProv(ctx sdk.Context, lp *types.LiquidityProvider) {
+func (k Keeper) SetLiqProv(ctx sdk.Context, lp *types.LiquidityProvider) error {
 	if !lp.Validate() {
-		return
-	}
+		// TODO add to errors
+		return errors.New("liquidity provider invalid")
+	} 
 
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetProviderKey(lp.Liquidity.Symbol, lp.Creator)
 	store.Set(key, k.cdc.MustMarshal(lp))
+	return nil
 }
 
 func (k Keeper) GetLiqProv(ctx sdk.Context, poolName string, lpAddr string) (types.LiquidityProvider, error) {

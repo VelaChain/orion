@@ -123,3 +123,35 @@ func (k Keeper) GetPoolsIterator(ctx sdk.Context) sdk.Iterator {
 	return sdk.KVStorePrefixIterator(store, types.KeyPoolPrefix)
 }
 
+// TODO
+// assume pool has liquidity on error
+func (k Keeper) HasLiquidity(ctx sdk.Context, poolName string) (bool, error) {
+	iterator, err := k.GetProvidersIterator(ctx, poolName)
+	if err != nil {
+		return true, err
+	}
+	
+	defer func(iterator sdk.Iterator){
+		err := iterator.Close()
+		if err != nil {
+			panic(err)
+		}
+	}(iterator)
+	for ; iterator.Valid(); iterator.Next() {
+		var lp types.LiquidityProvider
+		bytesVal := iterator.Value()
+		k.cdc.MustUnmarshal(bytesVal, &lp)
+		if !lp.Liquidity.Amount.IsZero(){
+			return true, nil
+		}
+	}
+	return false, nil
+} 
+
+func ValidJoinRatio(poolPA PoolAssets, addPA PoolAssets) bool {
+	return (poolPA.Assets[0].Mul(addPA.Assets[1])).Equals(poolPA.Assets[1].Mult(addPA.Assets[0]))
+}
+
+func GetSharesOut(p Pool, assetsIn PoolAssets) sdk.Int {
+	return assetsIn[0].Amount.Mul(p.Shares.Amount).Quo(p.Assets[0].Amount)
+}
