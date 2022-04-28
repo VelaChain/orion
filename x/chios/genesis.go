@@ -31,6 +31,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 	genesis.PortId = k.GetPort(ctx)
 	// this line is used by starport scaffolding # genesis/module/export
-
+	genesis.PoolList = k.GetPools(ctx)
+	genesis.Providers = k.GetAllProviders(ctx)
 	return genesis
 }

@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { Params } from "../chios/params";
-import { Pool, LiquidityProviders } from "../chios/types";
+import { Pool, LiquidityProvider } from "../chios/types";
 import { Writer, Reader } from "protobufjs/minimal";
 
 export const protobufPackage = "VelaChain.orion.chios";
@@ -9,9 +9,9 @@ export const protobufPackage = "VelaChain.orion.chios";
 export interface GenesisState {
   params: Params | undefined;
   port_id: string;
-  pool_list: Pool[];
+  poolList: Pool[];
   /** this line is used by starport scaffolding # genesis/proto/state */
-  providers: LiquidityProviders[];
+  providers: LiquidityProvider[];
 }
 
 const baseGenesisState: object = { port_id: "" };
@@ -24,11 +24,11 @@ export const GenesisState = {
     if (message.port_id !== "") {
       writer.uint32(18).string(message.port_id);
     }
-    for (const v of message.pool_list) {
+    for (const v of message.poolList) {
       Pool.encode(v!, writer.uint32(26).fork()).ldelim();
     }
     for (const v of message.providers) {
-      LiquidityProviders.encode(v!, writer.uint32(34).fork()).ldelim();
+      LiquidityProvider.encode(v!, writer.uint32(34).fork()).ldelim();
     }
     return writer;
   },
@@ -37,7 +37,7 @@ export const GenesisState = {
     const reader = input instanceof Uint8Array ? new Reader(input) : input;
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = { ...baseGenesisState } as GenesisState;
-    message.pool_list = [];
+    message.poolList = [];
     message.providers = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -49,11 +49,11 @@ export const GenesisState = {
           message.port_id = reader.string();
           break;
         case 3:
-          message.pool_list.push(Pool.decode(reader, reader.uint32()));
+          message.poolList.push(Pool.decode(reader, reader.uint32()));
           break;
         case 4:
           message.providers.push(
-            LiquidityProviders.decode(reader, reader.uint32())
+            LiquidityProvider.decode(reader, reader.uint32())
           );
           break;
         default:
@@ -66,7 +66,7 @@ export const GenesisState = {
 
   fromJSON(object: any): GenesisState {
     const message = { ...baseGenesisState } as GenesisState;
-    message.pool_list = [];
+    message.poolList = [];
     message.providers = [];
     if (object.params !== undefined && object.params !== null) {
       message.params = Params.fromJSON(object.params);
@@ -78,14 +78,14 @@ export const GenesisState = {
     } else {
       message.port_id = "";
     }
-    if (object.pool_list !== undefined && object.pool_list !== null) {
-      for (const e of object.pool_list) {
-        message.pool_list.push(Pool.fromJSON(e));
+    if (object.poolList !== undefined && object.poolList !== null) {
+      for (const e of object.poolList) {
+        message.poolList.push(Pool.fromJSON(e));
       }
     }
     if (object.providers !== undefined && object.providers !== null) {
       for (const e of object.providers) {
-        message.providers.push(LiquidityProviders.fromJSON(e));
+        message.providers.push(LiquidityProvider.fromJSON(e));
       }
     }
     return message;
@@ -96,16 +96,16 @@ export const GenesisState = {
     message.params !== undefined &&
       (obj.params = message.params ? Params.toJSON(message.params) : undefined);
     message.port_id !== undefined && (obj.port_id = message.port_id);
-    if (message.pool_list) {
-      obj.pool_list = message.pool_list.map((e) =>
+    if (message.poolList) {
+      obj.poolList = message.poolList.map((e) =>
         e ? Pool.toJSON(e) : undefined
       );
     } else {
-      obj.pool_list = [];
+      obj.poolList = [];
     }
     if (message.providers) {
       obj.providers = message.providers.map((e) =>
-        e ? LiquidityProviders.toJSON(e) : undefined
+        e ? LiquidityProvider.toJSON(e) : undefined
       );
     } else {
       obj.providers = [];
@@ -115,7 +115,7 @@ export const GenesisState = {
 
   fromPartial(object: DeepPartial<GenesisState>): GenesisState {
     const message = { ...baseGenesisState } as GenesisState;
-    message.pool_list = [];
+    message.poolList = [];
     message.providers = [];
     if (object.params !== undefined && object.params !== null) {
       message.params = Params.fromPartial(object.params);
@@ -127,14 +127,14 @@ export const GenesisState = {
     } else {
       message.port_id = "";
     }
-    if (object.pool_list !== undefined && object.pool_list !== null) {
-      for (const e of object.pool_list) {
-        message.pool_list.push(Pool.fromPartial(e));
+    if (object.poolList !== undefined && object.poolList !== null) {
+      for (const e of object.poolList) {
+        message.poolList.push(Pool.fromPartial(e));
       }
     }
     if (object.providers !== undefined && object.providers !== null) {
       for (const e of object.providers) {
-        message.providers.push(LiquidityProviders.fromPartial(e));
+        message.providers.push(LiquidityProvider.fromPartial(e));
       }
     }
     return message;

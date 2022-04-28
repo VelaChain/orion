@@ -3,12 +3,13 @@ package cli
 import (
 	"fmt"
 	"time"
-	"strconv"
+//	"strconv"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/cast"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/VelaChain/orion/x/chios/types"
@@ -51,54 +52,54 @@ func CmdCreatePairPool() *cobra.Command {
 	cmd := &cobra.Command {
 		Use:	"create-pair-pool [denom-a] [amount-a] [denom-b] [amount-b] [shares]",
 		Short:	"Broadcast message create-pair-pool",
-		Args:	cobra.ExactArgs(6),
+		Args:	cobra.ExactArgs(5),
 		RunE:	func(cmd *cobra.Command, args []string) (err error) {
-			// handle each arg
-			argDenomA := args[0]
-			
-			amountA, err := cast.ToUint64E(args[1])
-			if err != nil {
-				return err
-			}
+					// handle each arg
+					argDenomA := args[0]
+					
+					amountA, err := cast.ToUint64E(args[1])
+					if err != nil {
+						return err
+					}
 
-			argAmountA := sdk.NewIntFromUint64(amountA)
+					argAmountA := sdk.NewIntFromUint64(amountA)
 
-			argDenomB := args[2]
+					argDenomB := args[2]
 
-			amountB, err := cast.ToUint64E(args[3])
-			if err != nil {
-				return err
-			}
+					amountB, err := cast.ToUint64E(args[3])
+					if err != nil {
+						return err
+					}
 
-			argAmountB := sdk.NewIntFromUint64(amountB)
+					argAmountB := sdk.NewIntFromUint64(amountB)
 
-			shares, err := cast.ToUint64E(args[4])
-			if err != nil{
-				return err
-			}
+					shares, err := cast.ToUint64E(args[4])
+					if err != nil{
+						return err
+					}
 
-			argSharesOut := sdk.NewIntFromUint64(shares) 
+					argSharesOut := sdk.NewIntFromUint64(shares) 
 
-			clientCtx, err := client.GetClientTxContext(cmd)
-			if err != nil {
-				return err
-			}
-			// create msg
-			msg := types.MsgCreatePairPool{
-				Creator:	clientCtx.GetFromAddress().String(),
-				DenomA: 	argDenomA,
-				AmountA:	argAmountA,
-				DenomB:		argDenomB,
-				AmountB:	argAmountB,
-				SharesOut:	argSharesOut,
-			}
+					clientCtx, err := client.GetClientTxContext(cmd)
+					if err != nil {
+						return err
+					}
+					// create msg
+					msg := types.NewMsgCreatePairPool( 
+						clientCtx.GetFromAddress().String(),
+						argDenomA,
+						argAmountA,
+						argDenomB,
+						argAmountB,
+						argSharesOut,
+					)
 
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
+					if err := msg.ValidateBasic(); err != nil {
+						return err
+					}
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-		},
+					return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+				},
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
@@ -111,7 +112,7 @@ func CmdJoinPairPool() *cobra.Command {
 	cmd := &cobra.Command {
 		Use:	"join-pair-pool [denom-a] [amount-a] [denom-b] [amount-b] [shares]",
 		Short:	"Broadcast message join-pair-pool",
-		Args:	cobra.ExactArgs(6),
+		Args:	cobra.ExactArgs(5),
 		RunE:	func(cmd *cobra.Command, args []string) (err error) {
 			// handle each arg
 			argDenomA := args[0]
@@ -144,14 +145,14 @@ func CmdJoinPairPool() *cobra.Command {
 					return err
 			}
 			// create msg
-			msg := types.MsgJoinPairPool{
-				Creator:	clientCtx.GetFromAddress().String(),
-				DenomA:		argDenomA,
-				AmountA:	argAmountA,
-				DenomB:		argDenomB,
-				AmountB:	argAmountB,
-				SharesOut:	argSharesOut,
-			}
+			msg := types.NewMsgJoinPairPool(
+				clientCtx.GetFromAddress().String(),
+				argDenomA,
+				argAmountA,
+				argDenomB,
+				argAmountB,
+				argSharesOut,
+			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -169,7 +170,7 @@ func CmdExitPairPool() *cobra.Command {
 	cmd := &cobra.Command {
 		Use:	"exit-pair-pool [pool-id]",
 		Short:	"Broadcast message exit-pair-pool",
-		Args:	cobra.ExactArgs(2),
+		Args:	cobra.ExactArgs(1),
 		RunE:	func(cmd *cobra.Command, args []string) (err error) {
 			// handle each arg
 			argPoolId := args[0]
@@ -179,11 +180,11 @@ func CmdExitPairPool() *cobra.Command {
 					return err
 			}
 			// create msg
-			msg := types.MsgExitPairPool{
-				Creator:	clientCtx.GetFromAddress().String(),
-				PoolId:		argPoolId,
-			}	
-			if err := msg.ValidateBasic(); err != nill {
+			msg := types.NewMsgExitPairPool(
+				clientCtx.GetFromAddress().String(),
+				argPoolId,
+			)
+			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
@@ -200,7 +201,7 @@ func CmdSwapPair() *cobra.Command {
 	cmd := &cobra.Command {
 		Use:	"swap-pair [denom-in] [amount-in] [denom-out] [min-amount-out]",
 		Short:	"",
-		Args:	cobra.ExactArgs(5),
+		Args:	cobra.ExactArgs(4),
 		RunE:	func(cmd *cobra.Command, args []string) (err error) {
 			// handle each arg
 			argDenomIn := args[0]
@@ -226,13 +227,13 @@ func CmdSwapPair() *cobra.Command {
 					return err
 			}
 			// create msg
-			msg := types.MsgSwapPair{
-				Creator:		clientCtx.GetFromAddress().String(),
-				DenomIn:		argDenomIn,
-				AmountIn:		argAmountIn,
-				DenomOut:		argDenomOut,
-				MinAmountOut:	argMinAmountOut,
-			}
+			msg := types.NewMsgSwapPair(
+				clientCtx.GetFromAddress().String(),
+				argDenomIn,
+				argAmountIn,
+				argDenomOut,
+				argMinAmountOut,
+			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -250,7 +251,7 @@ func CmdAddLiquidityPair() *cobra.Command {
 	cmd := &cobra.Command {
 		Use:	"add-liquidity-pair [denom-a] [amount-a] [denom-b] [amount-b] [shares]",
 		Short:	"Broadcast message add-liquidity-pair",
-		Args:	cobra.ExactArgs(6),
+		Args:	cobra.ExactArgs(5),
 		RunE:	func(cmd *cobra.Command, args []string) (err error) {
 			// handle each arg
 			argDenomA := args[0]
@@ -283,14 +284,14 @@ func CmdAddLiquidityPair() *cobra.Command {
 					return err
 			}
 			// create msg
-			msg := types.MsgAddLiquidityPair{
-				Creator:		clientCtx.GetFromAddress().String(),
-				DenomA:			argDenomA,
-				AmountA:		argAmountA,
-				DenomB:			argDenomB,
-				AmountB:		argAmountB,
-				SharesOut:		argSharesOut,
-			}
+			msg := types.NewMsgAddLiquidityPair(
+				clientCtx.GetFromAddress().String(),
+				argDenomA,
+				argAmountA,
+				argDenomB,
+				argAmountB,
+				argSharesOut,
+			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -308,7 +309,7 @@ func CmdRemoveLiquidityPair() *cobra.Command {
 	cmd := &cobra.Command {
 		Use:	"remove-liquidity-pair [shares-denom] [shares-amount]",
 		Short:	"Broadcast message remove-liquidity-pair",
-		Args:	cobra.ExactArgs(3),
+		Args:	cobra.ExactArgs(2),
 		RunE:	func(cmd *cobra.Command, args []string) (err error) {
 			// handle each arg
 			argSharesDenom := args[0]
@@ -325,11 +326,11 @@ func CmdRemoveLiquidityPair() *cobra.Command {
 					return err
 			}
 			// create msg
-			msg := types.MsgRemoveLiquidityPair{
-				Creator:		clientCtx.GetFromAddress().String(),
-				SharesDenom:	argShareDenom, 
-				SharesAmount:	argShareAmount,
-			}
+			msg := types.NewMsgRemoveLiquidityPair(
+				clientCtx.GetFromAddress().String(),
+				argSharesDenom, 
+				argSharesAmount,
+			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
