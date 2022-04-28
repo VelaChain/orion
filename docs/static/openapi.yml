@@ -48548,9 +48548,120 @@ definitions:
         description: params holds all the parameters of this module.
         type: object
     description: QueryParamsResponse is response type for the Query/Params RPC method.
+  VelaChain.orion.chios.MsgAddLiquidityPairResponse:
+    type: object
+    properties:
+      poolId:
+        type: string
+      shares:
+        type: object
+        properties:
+          symbol:
+            type: string
+            title: symbol contains share denom
+          amount:
+            type: string
+            title: amount of shares
+  VelaChain.orion.chios.MsgCreatePairPoolResponse:
+    type: object
+    properties:
+      poolId:
+        type: string
+      shares:
+        type: object
+        properties:
+          symbol:
+            type: string
+            title: symbol contains share denom
+          amount:
+            type: string
+            title: amount of shares
+  VelaChain.orion.chios.MsgExitPairPoolResponse:
+    type: object
+    properties:
+      poolId:
+        type: string
+      remainingShares:
+        type: object
+        properties:
+          symbol:
+            type: string
+            title: symbol contains share denom
+          amount:
+            type: string
+            title: amount of shares
+  VelaChain.orion.chios.MsgJoinPairPoolResponse:
+    type: object
+    properties:
+      poolId:
+        type: string
+      shares:
+        type: object
+        properties:
+          symbol:
+            type: string
+            title: symbol contains share denom
+          amount:
+            type: string
+            title: amount of shares
+  VelaChain.orion.chios.MsgRemoveLiquidityPairResponse:
+    type: object
+    properties:
+      creator:
+        type: string
+      assetA:
+        type: object
+        properties:
+          symbol:
+            type: string
+            title: symbol contains denom
+          amount:
+            type: string
+            title: skd.Int amout of pool asset
+      assetB:
+        type: object
+        properties:
+          symbol:
+            type: string
+            title: symbol contains denom
+          amount:
+            type: string
+            title: skd.Int amout of pool asset
+  VelaChain.orion.chios.MsgSwapPairResponse:
+    type: object
+    properties:
+      creator:
+        type: string
+      assetOut:
+        type: object
+        properties:
+          symbol:
+            type: string
+            title: symbol contains denom
+          amount:
+            type: string
+            title: skd.Int amout of pool asset
   VelaChain.orion.chios.Params:
     type: object
     description: Params defines the parameters for the module.
+  VelaChain.orion.chios.PoolAsset:
+    type: object
+    properties:
+      symbol:
+        type: string
+        title: symbol contains denom
+      amount:
+        type: string
+        title: skd.Int amout of pool asset
+  VelaChain.orion.chios.PoolShares:
+    type: object
+    properties:
+      symbol:
+        type: string
+        title: symbol contains share denom
+      amount:
+        type: string
+        title: amount of shares
   VelaChain.orion.chios.QueryParamsResponse:
     type: object
     properties:

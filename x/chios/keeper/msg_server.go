@@ -5,9 +5,9 @@ import (
 
 	"github.com/VelaChain/orion/x/chios/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/types/query"
+	//sdk "github.com/cosmos/cosmos-sdk/types"
+	//sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	//"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 type msgServer struct {
@@ -43,7 +43,7 @@ func (k msgServer) SwapPair(goCtx context.Context, msg *types.MsgSwapPair) (*typ
 } 
 
 // TODO
-func (k msgServer) AddLiquidityPair(goCtx context.Context, msg *types.MsgAddLiquidityPair) (*types.AddLiquidityPairResponse, error) {
+func (k msgServer) AddLiquidityPair(goCtx context.Context, msg *types.MsgAddLiquidityPair) (*types.MsgAddLiquidityPairResponse, error) {
 	return &types.MsgAddLiquidityPairResponse{}, nil
 }
 

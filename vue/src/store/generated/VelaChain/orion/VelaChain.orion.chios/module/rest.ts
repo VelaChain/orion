@@ -9,10 +9,51 @@
  * ---------------------------------------------------------------
  */
 
+export interface ChiosMsgAddLiquidityPairResponse {
+  poolId?: string;
+  shares?: ChiosPoolShares;
+}
+
+export interface ChiosMsgCreatePairPoolResponse {
+  poolId?: string;
+  shares?: ChiosPoolShares;
+}
+
+export interface ChiosMsgExitPairPoolResponse {
+  poolId?: string;
+  remainingShares?: ChiosPoolShares;
+}
+
+export interface ChiosMsgJoinPairPoolResponse {
+  poolId?: string;
+  shares?: ChiosPoolShares;
+}
+
+export interface ChiosMsgRemoveLiquidityPairResponse {
+  creator?: string;
+  assetA?: ChiosPoolAsset;
+  assetB?: ChiosPoolAsset;
+}
+
+export interface ChiosMsgSwapPairResponse {
+  creator?: string;
+  assetOut?: ChiosPoolAsset;
+}
+
 /**
  * Params defines the parameters for the module.
  */
 export type ChiosParams = object;
+
+export interface ChiosPoolAsset {
+  symbol?: string;
+  amount?: string;
+}
+
+export interface ChiosPoolShares {
+  symbol?: string;
+  amount?: string;
+}
 
 /**
  * QueryParamsResponse is response type for the Query/Params RPC method.

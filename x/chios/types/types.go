@@ -58,7 +58,7 @@ func NewPoolAsset(symbol string, amount sdk.Int) PoolAsset{
 	return pa	
 }
 
-func NewPoolShares(symbol string, amount sdk.Int) PoolShare{
+func NewPoolShares(symbol string, amount sdk.Int) PoolShares{
 	ps := PoolShares{
 		Symbol:	symbol,
 		Amount:	amount,
