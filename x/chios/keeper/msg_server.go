@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	"github.com/VelaChain/orion/x/chios/types"
 
@@ -27,7 +28,7 @@ func (k msgServer) CreatePairPool(goCtx context.Context, msg *types.MsgCreatePai
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// TODO make pools meet some min amount
 
-	if k.Has(ctx, types.GetPoolKeyFromPoolName(types.GetPoolNameFromAssets(types.NewPoolAssets(types.NewPoolAsset(msg.DenomA, msg.AmountA), types.NewPoolAsset(msg.DenomB, msg.AmountB))))){
+	if ctx.KVStore(k.storeKey).Has(types.GetPoolKeyFromPoolName(types.GetPoolNameFromAssets(types.NewPoolAssets(types.NewPoolAsset(msg.DenomA, msg.AmountA), types.NewPoolAsset(msg.DenomB, msg.AmountB))))){
 		// TODO add to errors
 		return &types.MsgCreatePairPoolResponse{}, errors.New("Pool already exists")
 	}
@@ -47,7 +48,7 @@ func (k msgServer) JoinPairPool(goCtx context.Context, msg *types.MsgJoinPairPoo
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	
 	// check if pool already exists
-	if !k.Has(ctx, types.GetPoolKeyFromPoolName(types.GetPoolNameFromAssets(types.NewPoolAssets(types.NewPoolAsset(msg.DenomA, msg.AmountA), types.NewPoolAsset(msg.DenomB, msg.AmountB))))){
+	if !ctx.KVStore(k.storeKey).Has(types.GetPoolKeyFromPoolName(types.GetPoolNameFromAssets(types.NewPoolAssets(types.NewPoolAsset(msg.DenomA, msg.AmountA), types.NewPoolAsset(msg.DenomB, msg.AmountB))))){
 		// TODO add to errors
 		return &types.MsgJoinPairPoolResponse{}, errors.New("Pool DNE")
 	}
@@ -67,7 +68,7 @@ func (k msgServer) ExitPairPool(goCtx context.Context, msg *types.MsgExitPairPoo
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check if pool already exists
-	if !k.Has(ctx, types.GetPoolKeyFromPoolName(types.GetPoolNameFromAssets(types.NewPoolAssets(types.NewPoolAsset(msg.DenomA, msg.AmountA), types.NewPoolAsset(msg.DenomB, msg.AmountB))))){
+	if !ctx.KVStore(k.storeKey).Has(types.GetPoolKeyFromPoolName(msg.ShareDenom)){
 		// TODO add to errors
 		return &types.MsgExitPairPoolResponse{}, errors.New("Pool DNE")
 	}
@@ -79,15 +80,16 @@ func (k msgServer) ExitPairPool(goCtx context.Context, msg *types.MsgExitPairPoo
 
 	// TODO emit event here?
 
-	return &types.MsgExitPairPoolResponse{PoolId: poolName, Assets: assets} nil
+	return &types.MsgExitPairPoolResponse{PoolId: poolName, Assets: assets}, nil
 }
 
 // TODO
 func (k msgServer) SwapPair(goCtx context.Context, msg *types.MsgSwapPair) (*types.MsgSwapPairResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// check if pool already exists
-	if !k.Has(ctx, types.GetPoolKeyFromPoolName(types.GetPoolNameFromAssets(types.NewPoolAssets(types.NewPoolAsset(msg.DenomA, msg.AmountA), types.NewPoolAsset(msg.DenomB, msg.AmountB))))){
+	poolName := types.GetPoolNameFromAssets(types.NewPoolAssets(types.NewPoolAsset(msg.DenomIn, msg.AmountIn), types.NewPoolAsset(msg.DenomOut, msg.MinAmountOut)))
+	if !ctx.KVStore(k.storeKey).Has(types.GetPoolKeyFromPoolName(poolName)) {
+		// TODO add to errors
 		return &types.MsgSwapPairResponse{}, errors.New("Pool DNE")
 	}
 
@@ -106,7 +108,7 @@ func (k msgServer) AddLiquidityPair(goCtx context.Context, msg *types.MsgAddLiqu
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check if pool exists
-	if !k.Has(ctx, types.GetPoolKeyFromPoolName(types.GetPoolNameFromAssets(types.NewPoolAssets(types.NewPoolAsset(msg.DenomA, msg.AmountA), types.NewPoolAsset(msg.DenomB, msg.AmountB))))){
+	if !ctx.KVStore(k.storeKey).Has(types.GetPoolKeyFromPoolName(types.GetPoolNameFromAssets(types.NewPoolAssets(types.NewPoolAsset(msg.DenomA, msg.AmountA), types.NewPoolAsset(msg.DenomB, msg.AmountB))))){
 		return &types.MsgAddLiquidityPairResponse{}, errors.New("Pool DNE")
 	}
 
@@ -124,7 +126,7 @@ func (k msgServer) AddLiquidityPair(goCtx context.Context, msg *types.MsgAddLiqu
 func (k msgServer) RemoveLiquidityPair(goCtx context.Context, msg *types.MsgRemoveLiquidityPair) (*types.MsgRemoveLiquidityPairResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if !k.Has(ctx, types.GetPoolKeyFromPoolName(types.GetPoolNameFromAssets(types.NewPoolAssets(types.NewPoolAsset(msg.DenomA, msg.AmountA), types.NewPoolAsset(msg.DenomB, msg.AmountB))))){
+	if !ctx.KVStore(k.storeKey).Has(types.GetPoolKeyFromPoolName(msg.SharesDenom)){
 		return &types.MsgRemoveLiquidityPairResponse{}, errors.New("Pool DNE")
 	}
 

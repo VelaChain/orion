@@ -49,10 +49,11 @@ func NewMsgJoinPairPool(creator string, denomA string, amountA sdk.Int, denomB s
 	}
 }
 
-func NewMsgExitPairPool(creator string, poolName string) *MsgExitPairPool{
+func NewMsgExitPairPool(creator string, sharesDenom string, sharesAmount sdk.Int) *MsgExitPairPool{
 	return &MsgExitPairPool{
-		Creator:	creator,
-		PoolId:		poolName,
+		Creator:		creator,
+		ShareDenom:		sharesDenom,
+		ShareAmount:	sharesAmount, 
 	}
 }
 
@@ -182,6 +183,7 @@ func (msg *MsgRemoveLiquidityPair) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{creator}
 }
 
+// TODO
 func (msg *MsgCreatePairPool) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
@@ -191,6 +193,7 @@ func (msg *MsgCreatePairPool) ValidateBasic() error {
 	return nil
 }
 
+// TODO
 func (msg *MsgJoinPairPool) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
@@ -200,6 +203,7 @@ func (msg *MsgJoinPairPool) ValidateBasic() error {
 	return nil
 }
 
+// TODO
 func (msg *MsgExitPairPool) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
@@ -209,6 +213,7 @@ func (msg *MsgExitPairPool) ValidateBasic() error {
 	return nil
 }
 
+// TODO
 func (msg *MsgSwapPair) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
@@ -218,6 +223,7 @@ func (msg *MsgSwapPair) ValidateBasic() error {
 	return nil
 }
 
+// TODO
 func (msg *MsgAddLiquidityPair) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
@@ -227,6 +233,7 @@ func (msg *MsgAddLiquidityPair) ValidateBasic() error {
 	return nil
 }
 
+// TODO
 func (msg *MsgRemoveLiquidityPair) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {

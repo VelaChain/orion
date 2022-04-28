@@ -81,7 +81,11 @@ message MsgJoinPairPoolResponse {
 
 message MsgExitPairPool {
     string creator = 1;
-    string poolId = 2;
+    string shareDenom = 2;
+    string shareAmount = 3 [
+        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+        (gogoproto.nullable) = false
+    ];
 }
 
 message MsgExitPairPoolResponse {
@@ -143,6 +147,6 @@ message MsgRemoveLiquidityPair {
 
 message MsgRemoveLiquidityPairResponse {
     string creator = 1;
-    chios.PoolAssets assets = 2;
+    chios.PoolAssets assets = 2 [(gogoproto.nullable) = false]; 
 }
 

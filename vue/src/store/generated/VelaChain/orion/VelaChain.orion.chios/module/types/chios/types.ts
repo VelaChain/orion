@@ -1,6 +1,5 @@
 /* eslint-disable */
-import * as Long from "long";
-import { util, configure, Writer, Reader } from "protobufjs/minimal";
+import { Writer, Reader } from "protobufjs/minimal";
 
 export const protobufPackage = "VelaChain.orion.chios";
 
@@ -43,8 +42,6 @@ export interface Pool {
    * in a lexigraphical ordering
    */
   id: string;
-  /** pool number (number of pools when pool is created) */
-  number: number;
   /** pool assets owned by pool */
   poolAssets: PoolAssets | undefined;
   /** pool shares live in chain (minted and not yet burned) */
@@ -442,33 +439,30 @@ export const PoolShares = {
   },
 };
 
-const basePool: object = { id: "", number: 0, swapFee: "", exitFee: "" };
+const basePool: object = { id: "", swapFee: "", exitFee: "" };
 
 export const Pool = {
   encode(message: Pool, writer: Writer = Writer.create()): Writer {
     if (message.id !== "") {
       writer.uint32(10).string(message.id);
     }
-    if (message.number !== 0) {
-      writer.uint32(16).uint64(message.number);
-    }
     if (message.poolAssets !== undefined) {
-      PoolAssets.encode(message.poolAssets, writer.uint32(26).fork()).ldelim();
+      PoolAssets.encode(message.poolAssets, writer.uint32(18).fork()).ldelim();
     }
     if (message.poolShares !== undefined) {
-      PoolShares.encode(message.poolShares, writer.uint32(34).fork()).ldelim();
+      PoolShares.encode(message.poolShares, writer.uint32(26).fork()).ldelim();
     }
     if (message.liquidityProviders !== undefined) {
       LiquidityProviders.encode(
         message.liquidityProviders,
-        writer.uint32(42).fork()
+        writer.uint32(34).fork()
       ).ldelim();
     }
     if (message.swapFee !== "") {
-      writer.uint32(50).string(message.swapFee);
+      writer.uint32(42).string(message.swapFee);
     }
     if (message.exitFee !== "") {
-      writer.uint32(58).string(message.exitFee);
+      writer.uint32(50).string(message.exitFee);
     }
     return writer;
   },
@@ -484,24 +478,21 @@ export const Pool = {
           message.id = reader.string();
           break;
         case 2:
-          message.number = longToNumber(reader.uint64() as Long);
-          break;
-        case 3:
           message.poolAssets = PoolAssets.decode(reader, reader.uint32());
           break;
-        case 4:
+        case 3:
           message.poolShares = PoolShares.decode(reader, reader.uint32());
           break;
-        case 5:
+        case 4:
           message.liquidityProviders = LiquidityProviders.decode(
             reader,
             reader.uint32()
           );
           break;
-        case 6:
+        case 5:
           message.swapFee = reader.string();
           break;
-        case 7:
+        case 6:
           message.exitFee = reader.string();
           break;
         default:
@@ -518,11 +509,6 @@ export const Pool = {
       message.id = String(object.id);
     } else {
       message.id = "";
-    }
-    if (object.number !== undefined && object.number !== null) {
-      message.number = Number(object.number);
-    } else {
-      message.number = 0;
     }
     if (object.poolAssets !== undefined && object.poolAssets !== null) {
       message.poolAssets = PoolAssets.fromJSON(object.poolAssets);
@@ -560,7 +546,6 @@ export const Pool = {
   toJSON(message: Pool): unknown {
     const obj: any = {};
     message.id !== undefined && (obj.id = message.id);
-    message.number !== undefined && (obj.number = message.number);
     message.poolAssets !== undefined &&
       (obj.poolAssets = message.poolAssets
         ? PoolAssets.toJSON(message.poolAssets)
@@ -584,11 +569,6 @@ export const Pool = {
       message.id = object.id;
     } else {
       message.id = "";
-    }
-    if (object.number !== undefined && object.number !== null) {
-      message.number = object.number;
-    } else {
-      message.number = 0;
     }
     if (object.poolAssets !== undefined && object.poolAssets !== null) {
       message.poolAssets = PoolAssets.fromPartial(object.poolAssets);
@@ -624,16 +604,6 @@ export const Pool = {
   },
 };
 
-declare var self: any | undefined;
-declare var window: any | undefined;
-var globalThis: any = (() => {
-  if (typeof globalThis !== "undefined") return globalThis;
-  if (typeof self !== "undefined") return self;
-  if (typeof window !== "undefined") return window;
-  if (typeof global !== "undefined") return global;
-  throw "Unable to locate global object";
-})();
-
 type Builtin = Date | Function | Uint8Array | string | number | undefined;
 export type DeepPartial<T> = T extends Builtin
   ? T
@@ -644,15 +614,3 @@ export type DeepPartial<T> = T extends Builtin
   : T extends {}
   ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
-
-function longToNumber(long: Long): number {
-  if (long.gt(Number.MAX_SAFE_INTEGER)) {
-    throw new globalThis.Error("Value is larger than Number.MAX_SAFE_INTEGER");
-  }
-  return long.toNumber();
-}
-
-if (util.Long !== Long) {
-  util.Long = Long as any;
-  configure();
-}

@@ -48581,15 +48581,20 @@ definitions:
     properties:
       poolId:
         type: string
-      remainingShares:
+      assets:
         type: object
         properties:
-          symbol:
-            type: string
-            title: symbol contains share denom
-          amount:
-            type: string
-            title: amount of shares
+          pa:
+            type: array
+            items:
+              type: object
+              properties:
+                symbol:
+                  type: string
+                  title: symbol contains denom
+                amount:
+                  type: string
+                  title: skd.Int amout of pool asset
   VelaChain.orion.chios.MsgJoinPairPoolResponse:
     type: object
     properties:
@@ -48609,24 +48614,20 @@ definitions:
     properties:
       creator:
         type: string
-      assetA:
+      assets:
         type: object
         properties:
-          symbol:
-            type: string
-            title: symbol contains denom
-          amount:
-            type: string
-            title: skd.Int amout of pool asset
-      assetB:
-        type: object
-        properties:
-          symbol:
-            type: string
-            title: symbol contains denom
-          amount:
-            type: string
-            title: skd.Int amout of pool asset
+          pa:
+            type: array
+            items:
+              type: object
+              properties:
+                symbol:
+                  type: string
+                  title: symbol contains denom
+                amount:
+                  type: string
+                  title: skd.Int amout of pool asset
   VelaChain.orion.chios.MsgSwapPairResponse:
     type: object
     properties:
@@ -48653,6 +48654,20 @@ definitions:
       amount:
         type: string
         title: skd.Int amout of pool asset
+  VelaChain.orion.chios.PoolAssets:
+    type: object
+    properties:
+      pa:
+        type: array
+        items:
+          type: object
+          properties:
+            symbol:
+              type: string
+              title: symbol contains denom
+            amount:
+              type: string
+              title: skd.Int amout of pool asset
   VelaChain.orion.chios.PoolShares:
     type: object
     properties:

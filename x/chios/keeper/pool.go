@@ -14,6 +14,10 @@ func (k Keeper) ValidatePool(pool types.Pool) bool {
 	return pool.Validate()
 }
 
+func (k Keeper) HasPool(ctx sdk.Context, poolName string ) bool {
+	return ctx.KVStore(k.storeKey).Has(types.GetPoolKeyFromPoolName(poolName))
+}
+
 func (k Keeper) SetPool(ctx sdk.Context, pool *types.Pool) error {
 	if !pool.Validate(){
 		// TODO add to errors
@@ -126,10 +130,7 @@ func (k Keeper) GetPoolsIterator(ctx sdk.Context) sdk.Iterator {
 // TODO
 // assume pool has liquidity on error
 func (k Keeper) HasLiquidity(ctx sdk.Context, poolName string) (bool, error) {
-	iterator, err := k.GetProvidersIterator(ctx, poolName)
-	if err != nil {
-		return true, err
-	}
+	iterator := k.GetProvidersIterator(ctx, poolName)
 	
 	defer func(iterator sdk.Iterator){
 		err := iterator.Close()
@@ -148,10 +149,3 @@ func (k Keeper) HasLiquidity(ctx sdk.Context, poolName string) (bool, error) {
 	return false, nil
 } 
 
-func ValidJoinRatio(poolPA PoolAssets, addPA PoolAssets) bool {
-	return (poolPA.Assets[0].Mul(addPA.Assets[1])).Equals(poolPA.Assets[1].Mult(addPA.Assets[0]))
-}
-
-func GetSharesOut(p Pool, assetsIn PoolAssets) sdk.Int {
-	return assetsIn[0].Amount.Mul(p.Shares.Amount).Quo(p.Assets[0].Amount)
-}

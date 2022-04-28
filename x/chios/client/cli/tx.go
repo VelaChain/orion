@@ -170,10 +170,17 @@ func CmdExitPairPool() *cobra.Command {
 	cmd := &cobra.Command {
 		Use:	"exit-pair-pool [pool-id]",
 		Short:	"Broadcast message exit-pair-pool",
-		Args:	cobra.ExactArgs(1),
+		Args:	cobra.ExactArgs(2),
 		RunE:	func(cmd *cobra.Command, args []string) (err error) {
 			// handle each arg
-			argPoolId := args[0]
+			argSharesDenom := args[0]
+
+			sharesAmount, err := cast.ToUint64E(args[1])
+			if err != nil {
+				return err
+			}
+
+			argSharesAmount := sdk.NewIntFromUint64(sharesAmount)
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -182,7 +189,8 @@ func CmdExitPairPool() *cobra.Command {
 			// create msg
 			msg := types.NewMsgExitPairPool(
 				clientCtx.GetFromAddress().String(),
-				argPoolId,
+				argSharesDenom,
+				argSharesAmount,
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

@@ -21,7 +21,7 @@ export interface ChiosMsgCreatePairPoolResponse {
 
 export interface ChiosMsgExitPairPoolResponse {
   poolId?: string;
-  remainingShares?: ChiosPoolShares;
+  assets?: ChiosPoolAssets;
 }
 
 export interface ChiosMsgJoinPairPoolResponse {
@@ -31,8 +31,7 @@ export interface ChiosMsgJoinPairPoolResponse {
 
 export interface ChiosMsgRemoveLiquidityPairResponse {
   creator?: string;
-  assetA?: ChiosPoolAsset;
-  assetB?: ChiosPoolAsset;
+  assets?: ChiosPoolAssets;
 }
 
 export interface ChiosMsgSwapPairResponse {
@@ -48,6 +47,10 @@ export type ChiosParams = object;
 export interface ChiosPoolAsset {
   symbol?: string;
   amount?: string;
+}
+
+export interface ChiosPoolAssets {
+  pa?: ChiosPoolAsset[];
 }
 
 export interface ChiosPoolShares {

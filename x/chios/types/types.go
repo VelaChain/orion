@@ -26,11 +26,11 @@ func (p Pool) Validate() bool {
 
 
 func NewLiqProviders(lp ...LiquidityProvider) LiquidityProviders {
-	var liqProv LiquidityProvider
+	var liqProvs LiquidityProviders
 	for _, prov := range lp {
-		liqProv.Providers = append(liqProv.Providers, prov)
+		liqProvs.Providers = append(liqProvs.Providers, prov)
 	}
-	return liqProv
+	return liqProvs
 }
 
 // Returns new lp from address and shares
@@ -81,3 +81,10 @@ func NewPoolShares(symbol string, amount sdk.Int) PoolShares{
 	return ps
 }
 
+func ValidJoinRatio(poolPA PoolAssets, addPA PoolAssets) bool {
+	return (poolPA.Assets[0].Amount.Mul(addPA.Assets[1].Amount)).Equal(poolPA.Assets[1].Amount.Mul(addPA.Assets[0].Amount))
+}
+
+func GetSharesOut(p Pool, assetsIn PoolAssets) sdk.Int {
+	return assetsIn.Assets[0].Amount.Mul(p.Shares.Amount).Quo(p.Assets.Assets[0].Amount)
+}

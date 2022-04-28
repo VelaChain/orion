@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { Reader, Writer } from "protobufjs/minimal";
-import { PoolShares, PoolAsset } from "../chios/types";
+import { PoolShares, PoolAssets, PoolAsset } from "../chios/types";
 
 export const protobufPackage = "VelaChain.orion.chios";
 
@@ -35,12 +35,13 @@ export interface MsgJoinPairPoolResponse {
 
 export interface MsgExitPairPool {
   creator: string;
-  poolId: string;
+  shareDenom: string;
+  shareAmount: string;
 }
 
 export interface MsgExitPairPoolResponse {
   poolId: string;
-  remainingShares: PoolShares | undefined;
+  assets: PoolAssets | undefined;
 }
 
 export interface MsgSwapPair {
@@ -78,8 +79,7 @@ export interface MsgRemoveLiquidityPair {
 
 export interface MsgRemoveLiquidityPairResponse {
   creator: string;
-  assetA: PoolAsset | undefined;
-  assetB: PoolAsset | undefined;
+  assets: PoolAssets | undefined;
 }
 
 const baseMsgCreatePairPool: object = {
@@ -551,15 +551,22 @@ export const MsgJoinPairPoolResponse = {
   },
 };
 
-const baseMsgExitPairPool: object = { creator: "", poolId: "" };
+const baseMsgExitPairPool: object = {
+  creator: "",
+  shareDenom: "",
+  shareAmount: "",
+};
 
 export const MsgExitPairPool = {
   encode(message: MsgExitPairPool, writer: Writer = Writer.create()): Writer {
     if (message.creator !== "") {
       writer.uint32(10).string(message.creator);
     }
-    if (message.poolId !== "") {
-      writer.uint32(18).string(message.poolId);
+    if (message.shareDenom !== "") {
+      writer.uint32(18).string(message.shareDenom);
+    }
+    if (message.shareAmount !== "") {
+      writer.uint32(26).string(message.shareAmount);
     }
     return writer;
   },
@@ -575,7 +582,10 @@ export const MsgExitPairPool = {
           message.creator = reader.string();
           break;
         case 2:
-          message.poolId = reader.string();
+          message.shareDenom = reader.string();
+          break;
+        case 3:
+          message.shareAmount = reader.string();
           break;
         default:
           reader.skipType(tag & 7);
@@ -592,10 +602,15 @@ export const MsgExitPairPool = {
     } else {
       message.creator = "";
     }
-    if (object.poolId !== undefined && object.poolId !== null) {
-      message.poolId = String(object.poolId);
+    if (object.shareDenom !== undefined && object.shareDenom !== null) {
+      message.shareDenom = String(object.shareDenom);
     } else {
-      message.poolId = "";
+      message.shareDenom = "";
+    }
+    if (object.shareAmount !== undefined && object.shareAmount !== null) {
+      message.shareAmount = String(object.shareAmount);
+    } else {
+      message.shareAmount = "";
     }
     return message;
   },
@@ -603,7 +618,9 @@ export const MsgExitPairPool = {
   toJSON(message: MsgExitPairPool): unknown {
     const obj: any = {};
     message.creator !== undefined && (obj.creator = message.creator);
-    message.poolId !== undefined && (obj.poolId = message.poolId);
+    message.shareDenom !== undefined && (obj.shareDenom = message.shareDenom);
+    message.shareAmount !== undefined &&
+      (obj.shareAmount = message.shareAmount);
     return obj;
   },
 
@@ -614,10 +631,15 @@ export const MsgExitPairPool = {
     } else {
       message.creator = "";
     }
-    if (object.poolId !== undefined && object.poolId !== null) {
-      message.poolId = object.poolId;
+    if (object.shareDenom !== undefined && object.shareDenom !== null) {
+      message.shareDenom = object.shareDenom;
     } else {
-      message.poolId = "";
+      message.shareDenom = "";
+    }
+    if (object.shareAmount !== undefined && object.shareAmount !== null) {
+      message.shareAmount = object.shareAmount;
+    } else {
+      message.shareAmount = "";
     }
     return message;
   },
@@ -633,11 +655,8 @@ export const MsgExitPairPoolResponse = {
     if (message.poolId !== "") {
       writer.uint32(10).string(message.poolId);
     }
-    if (message.remainingShares !== undefined) {
-      PoolShares.encode(
-        message.remainingShares,
-        writer.uint32(18).fork()
-      ).ldelim();
+    if (message.assets !== undefined) {
+      PoolAssets.encode(message.assets, writer.uint32(18).fork()).ldelim();
     }
     return writer;
   },
@@ -655,7 +674,7 @@ export const MsgExitPairPoolResponse = {
           message.poolId = reader.string();
           break;
         case 2:
-          message.remainingShares = PoolShares.decode(reader, reader.uint32());
+          message.assets = PoolAssets.decode(reader, reader.uint32());
           break;
         default:
           reader.skipType(tag & 7);
@@ -674,13 +693,10 @@ export const MsgExitPairPoolResponse = {
     } else {
       message.poolId = "";
     }
-    if (
-      object.remainingShares !== undefined &&
-      object.remainingShares !== null
-    ) {
-      message.remainingShares = PoolShares.fromJSON(object.remainingShares);
+    if (object.assets !== undefined && object.assets !== null) {
+      message.assets = PoolAssets.fromJSON(object.assets);
     } else {
-      message.remainingShares = undefined;
+      message.assets = undefined;
     }
     return message;
   },
@@ -688,9 +704,9 @@ export const MsgExitPairPoolResponse = {
   toJSON(message: MsgExitPairPoolResponse): unknown {
     const obj: any = {};
     message.poolId !== undefined && (obj.poolId = message.poolId);
-    message.remainingShares !== undefined &&
-      (obj.remainingShares = message.remainingShares
-        ? PoolShares.toJSON(message.remainingShares)
+    message.assets !== undefined &&
+      (obj.assets = message.assets
+        ? PoolAssets.toJSON(message.assets)
         : undefined);
     return obj;
   },
@@ -706,13 +722,10 @@ export const MsgExitPairPoolResponse = {
     } else {
       message.poolId = "";
     }
-    if (
-      object.remainingShares !== undefined &&
-      object.remainingShares !== null
-    ) {
-      message.remainingShares = PoolShares.fromPartial(object.remainingShares);
+    if (object.assets !== undefined && object.assets !== null) {
+      message.assets = PoolAssets.fromPartial(object.assets);
     } else {
-      message.remainingShares = undefined;
+      message.assets = undefined;
     }
     return message;
   },
@@ -1275,11 +1288,8 @@ export const MsgRemoveLiquidityPairResponse = {
     if (message.creator !== "") {
       writer.uint32(10).string(message.creator);
     }
-    if (message.assetA !== undefined) {
-      PoolAsset.encode(message.assetA, writer.uint32(18).fork()).ldelim();
-    }
-    if (message.assetB !== undefined) {
-      PoolAsset.encode(message.assetB, writer.uint32(26).fork()).ldelim();
+    if (message.assets !== undefined) {
+      PoolAssets.encode(message.assets, writer.uint32(18).fork()).ldelim();
     }
     return writer;
   },
@@ -1300,10 +1310,7 @@ export const MsgRemoveLiquidityPairResponse = {
           message.creator = reader.string();
           break;
         case 2:
-          message.assetA = PoolAsset.decode(reader, reader.uint32());
-          break;
-        case 3:
-          message.assetB = PoolAsset.decode(reader, reader.uint32());
+          message.assets = PoolAssets.decode(reader, reader.uint32());
           break;
         default:
           reader.skipType(tag & 7);
@@ -1322,15 +1329,10 @@ export const MsgRemoveLiquidityPairResponse = {
     } else {
       message.creator = "";
     }
-    if (object.assetA !== undefined && object.assetA !== null) {
-      message.assetA = PoolAsset.fromJSON(object.assetA);
+    if (object.assets !== undefined && object.assets !== null) {
+      message.assets = PoolAssets.fromJSON(object.assets);
     } else {
-      message.assetA = undefined;
-    }
-    if (object.assetB !== undefined && object.assetB !== null) {
-      message.assetB = PoolAsset.fromJSON(object.assetB);
-    } else {
-      message.assetB = undefined;
+      message.assets = undefined;
     }
     return message;
   },
@@ -1338,13 +1340,9 @@ export const MsgRemoveLiquidityPairResponse = {
   toJSON(message: MsgRemoveLiquidityPairResponse): unknown {
     const obj: any = {};
     message.creator !== undefined && (obj.creator = message.creator);
-    message.assetA !== undefined &&
-      (obj.assetA = message.assetA
-        ? PoolAsset.toJSON(message.assetA)
-        : undefined);
-    message.assetB !== undefined &&
-      (obj.assetB = message.assetB
-        ? PoolAsset.toJSON(message.assetB)
+    message.assets !== undefined &&
+      (obj.assets = message.assets
+        ? PoolAssets.toJSON(message.assets)
         : undefined);
     return obj;
   },
@@ -1360,15 +1358,10 @@ export const MsgRemoveLiquidityPairResponse = {
     } else {
       message.creator = "";
     }
-    if (object.assetA !== undefined && object.assetA !== null) {
-      message.assetA = PoolAsset.fromPartial(object.assetA);
+    if (object.assets !== undefined && object.assets !== null) {
+      message.assets = PoolAssets.fromPartial(object.assets);
     } else {
-      message.assetA = undefined;
-    }
-    if (object.assetB !== undefined && object.assetB !== null) {
-      message.assetB = PoolAsset.fromPartial(object.assetB);
-    } else {
-      message.assetB = undefined;
+      message.assets = undefined;
     }
     return message;
   },
