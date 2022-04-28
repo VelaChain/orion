@@ -17,6 +17,30 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 
 		switch msg := msg.(type) {
+		case *types.MsgCreatePairPool:
+			res, err := msgServer.CreatePairPool(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+		
+		case *types.MsgJoinPairPool:
+			res, err := msgServer.JoinPairPool(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+		
+		case *types.MsgExitPairPool:
+			res, err := msgServer.ExitPairPool(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+		
+		case *types.MsgSwapPair:
+			res, err := msgServer.SwapPair(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)			
+		
+		case *types.MsgAddLiquidityPair:
+			res, err := msgServer.AddLiquidityPair(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+		
+		case *types.MsgRemoveLiquidityPair:
+			res, err := msgServer.RemoveLiquidityPair(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+		
 		// this line is used by starport scaffolding # 1
 		default:
 			errMsg := fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg)

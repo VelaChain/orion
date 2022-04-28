@@ -35,7 +35,7 @@ func (k Keeper) GetPool(ctx sdk.Context, poolName string) (types.Pool, error) {
 		return pool, errors.New("Pool DNE")
 	}
 	bz := store.Get(key)
-	k.cdc.MustUnmarshal(bz, &pool)
+	k.cdc.MustUnmarshal(bz, &pool)  
 	return pool, nil
 }
 
