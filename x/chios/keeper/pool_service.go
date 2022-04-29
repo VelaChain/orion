@@ -90,6 +90,7 @@ func validateRemoveLiquidityMsg(ctx sdk.Context, msg types.MsgRemoveLiquidityPai
 }
 
 
+
 // when called already know pool DNE 
 func (k Keeper) CreatePoolPair(ctx sdk.Context, msg *types.MsgCreatePairPool) (poolID string, sharesOut types.PoolShares, err error) {
 	// check msg exists
@@ -113,8 +114,6 @@ func (k Keeper) CreatePoolPair(ctx sdk.Context, msg *types.MsgCreatePairPool) (p
 	poolName := types.GetPoolNameFromAssets(assets)
 	// create pool shares
 	shares := types.NewPoolShares(poolName, msg.SharesOut)
-	// make creator the liquidity provider for created shares
-	lp := types.NewLiqProvider(msg.Creator, shares)
 	// create new pool w/ lp
 	pool, err := types.NewPairPool(poolName, assets, shares, types.NewLiqProviders(lp))
 	if err != nil {
@@ -153,12 +152,6 @@ func (k Keeper) CreatePoolPair(ctx sdk.Context, msg *types.MsgCreatePairPool) (p
 	if err != nil {
 		// TODO add to errors
 		return "", sharesOut, errors.New("unable to set pool")
-	}
-	// update KVStore for providers
-	err = k.SetLiqProv(ctx, &lp)
-	if err != nil {
-		// TODO add to errors
-		return "", sharesOut, errors.New("unable to set liquidity provider")
 	}
 
 	return pool.PoolId, shares, nil
@@ -215,20 +208,13 @@ func (k Keeper) JoinPoolPair(ctx sdk.Context, msg *types.MsgJoinPairPool) (poolN
 	}
 	
 	// update pool balances (allow assets to be in any order)
-	var newAmountA sdk.Int
-	var newAmountB sdk.Int
-
-	if pool.Assets.Assets[0].Symbol == msg.DenomA {
-		newAmountA = pool.Assets.Assets[0].Amount.Add(msg.AmountA)
-		newAmountB = pool.Assets.Assets[1].Amount.Add(msg.AmountB)
+	if pool.Assets.Asset[0].Symbol == msg.DenomA {
+		pool.Assets.Asset[0].Amount = pool.Assets.Asset[0].Amount.Add(msg.AmountA)
+		pool.Assets.Asset[1].Amount = pool.Assets.Asset[1].Amount.Add(msg.AmountB)
 	} else {
-		newAmountA = pool.Assets.Assets[0].Amount.Add(msg.AmountB)
-		newAmountB = pool.Assets.Assets[1].Amount.Add(msg.AmountA)
+		pool.Assets.Asset[0].Amount = pool.Assets.Asset[0].Amount.Add(msg.AmountB)
+		pool.Assets.Asset[1].Amount = pool.Assets.Asset[1].Amount.Add(msg.AmountA)
 	}
-
-	// update pool
-	pool.Assets.Assets[0].Amount = newAmountA
-	pool.Assets.Assets[1].Amount = newAmountB
 	pool.Shares.Amount = pool.Shares.Amount.Add(poolShares.Amount)
 
 	// handle sending coins
@@ -257,12 +243,6 @@ func (k Keeper) JoinPoolPair(ctx sdk.Context, msg *types.MsgJoinPairPool) (poolN
 		return "", poolShares, err
 	}
 
-	// coins have been successfully sent
-	// "send" shares by setting lp w/ new shares 	
-	err = k.SetLiqProv(ctx, &newProv) 
-	if err != nil {
-		return "", poolShares, err
-	}
 	// set pool
 	err = k.SetPool(ctx, &pool)
 	if err != nil {
@@ -273,7 +253,7 @@ func (k Keeper) JoinPoolPair(ctx sdk.Context, msg *types.MsgJoinPairPool) (poolN
 }
 
 // TODO
-func (k Keeper) ExitPoolPair(ctx sdk.Context, msg *types.MsgExitPairPool) (poolName string, assets types.PoolAssets, err error) {
+func (k Keeper) ExitPoolPair(ctx sdk.Context, msg *types.MsgExitPairPool, removedShares sdk.Int) (poolName string, assets types.PoolAssets, err error) {
 	// check msg exists
 	if msg == nil {
 		// TODO add to errors
@@ -284,6 +264,37 @@ func (k Keeper) ExitPoolPair(ctx sdk.Context, msg *types.MsgExitPairPool) (poolN
 		// TODO add to errors
 		return "", assets, err
 	}
+	// get pool
+	pool, err := k.GetPool(ctx, msg.ShareDenom)
+	if err != nil {
+		return "", assets, err
+	}
+	// calculate amount out
+	amtA, amtB := types.GetAssetPairOut(pool, removedShares)
+	// reduce pool balances
+	pool.Assets.Asset[0].Amount = pool.Assets.Asset[0].Amount.Sub(amtA)
+	pool.Assets.Asset[1].Amount = pool.Assets.Asset[1].Amount.Sub(amtB)
+	pool.Shares.Amount = pool.Shares.Amount.Sub(removedShares)	
+
+	// create sdk coins for pool assets out
+	coinA := sdk.NewCoin(amtA, pool.Assets.Asset[0].Symbol)
+	coinB := sdk.NewCoin(amtB, pool.Assets.Asset[1].Symbol)
+	// get creator acc address
+	accAddr, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		return "", assets, err
+	}
+	// send coins from module to account
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, accAddr, sdk.NewCoins(coinA, coinB))
+	if err != nil {
+		// TODO add to errors
+		return "", assets, err
+	}
+
+	assetA := types.NewPoolAsset(amtA, pool.Assets.Asset[0].Symbol)
+	assetB := types.NewPoolAsset(amtB, pool.Assets.Asset[1].Symbol)
+
+	assets = types.NewPoolAssets(assetA, assetB)
 
 	return msg.ShareDenom, assets, nil
 }
@@ -300,8 +311,48 @@ func (k Keeper) SwapAssetPair(ctx sdk.Context, msg *types.MsgSwapPair) (assetOut
 		// TODO add to errors
 		return assetOut, err
 	}
+	// use msg data to create pool assets
+	assetA := types.NewPoolAsset(msg.DenomA, msg.AmountA)
+	assetB := types.NewPoolAsset(msg.DenomB, msg.AmountB)
+	// wrap pool assets in pool assets
+	assets := types.NewPoolAssets(assetA, assetB)
+	// get pool name from assets
+	poolName := types.GetPoolNameFromAssets(assets)
+	// get pool
+	pool, err := k.GetPool(ctx, poolName)
+	if err != nil {
+		return assetOut, err
+	}
+	// get amount out
+	amt := types.GetAssetPairOut(pool.Assets, msg.AmountIn)
+	var coinOut sdk.Coin
+	var coinIn sdk.Coin
+	// change pool balances
+	if amt.Symbol == pool.Assets.Asset[0].Symbol {
+		pool.Assets.Asset[0].Amount = pool.Assets.Asset[0].Amount.Sub(amt.Amount)
+		coinOut = CoinFromAsset(pool.Assets.Asset[0])
+		pool.Assets.Asset[1].Amount = pool.Assets.Asset[1].Amount.Add(msg.AmountIn)
+		coinIn = CoinFromAsset(pool.Assets.Asset[1])
+	} else {
+		pool.Assets.Asset[1].Amount = pool.Assets.Asset[1].Amount.Sub(amt.Amount)
+		coinOut = CoinFromAsset(pool.Assets.Asset[1])
+		pool.Assets.Asset[0].Amount = pool.Assets.Asset[0].Amount.Add(msg.AmountIn)
+		coinIn = CoinFromAsset(pool.Assets.Asset[0])
+	}
+	// get account address
+	if accAddr, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
+		return assetOut, err
+	}
+	// send coins from account to module 
+	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, accAddr, types.ModuleName, sdk.NewCoins(coinIn)); err != nil {
+		return assetOut, err
+	}
+	// send coins from module to account
+	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, accAddr, sdk.NewCoins(coinOut)); err != nil {
+		return assetOut, err
+	}
 
-	return assetOut, nil
+	return amt, nil
 }
 
 // TODO

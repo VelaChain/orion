@@ -61,6 +61,11 @@ func PrefixKey(key string) []byte {
 // 	return append(KeyPoolPrefix, name...)
 // }
 
+func GetPoolNameFromAssetPair(assetA PoolAsset, assetB PoolAsset) string{
+	assets := NewPoolAssets(assetA, assetB)
+	return GetPoolKeyFromAssets(assets)
+}
+
 func GetPoolNameFromAssets(pa PoolAssets) string {
 	// sort assets by name
 	sort.Sort(pa)

@@ -49,11 +49,10 @@ func NewMsgJoinPairPool(creator string, denomA string, amountA sdk.Int, denomB s
 	}
 }
 
-func NewMsgExitPairPool(creator string, sharesDenom string, sharesAmount sdk.Int) *MsgExitPairPool{
+func NewMsgExitPairPool(creator string, sharesDenom string) *MsgExitPairPool{
 	return &MsgExitPairPool{
 		Creator:		creator,
 		ShareDenom:		sharesDenom,
-		ShareAmount:	sharesAmount, 
 	}
 }
 

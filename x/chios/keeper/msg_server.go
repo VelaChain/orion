@@ -23,41 +23,72 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
+
+
 // TODO
 func (k msgServer) CreatePairPool(goCtx context.Context, msg *types.MsgCreatePairPool) (*types.MsgCreatePairPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// TODO make pools meet some min amount
 
-	if ctx.KVStore(k.storeKey).Has(types.GetPoolKeyFromPoolName(types.GetPoolNameFromAssets(types.NewPoolAssets(types.NewPoolAsset(msg.DenomA, msg.AmountA), types.NewPoolAsset(msg.DenomB, msg.AmountB))))){
+	// get assets from denom and amount
+	assetA := types.NewPoolAsset(msg.DenomA, msg.AmountA)
+	assetB := types.NewPoolAsset(msg.DenomB, msg.AmountB)
+	// get pool name from asset pair
+	poolName := types.GetPoolNameFromAssetPair(assetA, assetB)
+	// check if pool exists using pool name
+	if k.Keeper.HasPool(ctx, poolName) {
 		// TODO add to errors
 		return &types.MsgCreatePairPoolResponse{}, errors.New("Pool already exists")
 	}
-
-	name, shares, err := k.Keeper.CreatePoolPair(ctx, msg)
+	// create pool
+	poolId, shares, err := k.Keeper.CreatePoolPair(ctx, msg)
 	if err != nil {
+		// TODO add to errors
+		return &types.MsgCreatePairPoolResponse{}, err
+	}
+	// get creator account address
+	accAddr, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		// TODO add to errors
+		return &types.MsgCreatePairPoolResponse{}, err
+	}
+	// create lp w/ shares and creator account address
+	_, err := k.Keeper.CreateLiqProv(ctx, accAddr, shares) 
+	if err != nil {
+		// TODO add to errors
 		return &types.MsgCreatePairPoolResponse{}, err
 	}
 
 	// TODO emit event here?
 
-	return &types.MsgCreatePairPoolResponse{PoolId: name, Shares: shares}, nil
+	return &types.MsgCreatePairPoolResponse{PoolId: poolId, Shares: shares}, nil
 }
 
 // TODO
 func (k msgServer) JoinPairPool(goCtx context.Context, msg *types.MsgJoinPairPool) (*types.MsgJoinPairPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	
-	// check if pool already exists
-	if !ctx.KVStore(k.storeKey).Has(types.GetPoolKeyFromPoolName(types.GetPoolNameFromAssets(types.NewPoolAssets(types.NewPoolAsset(msg.DenomA, msg.AmountA), types.NewPoolAsset(msg.DenomB, msg.AmountB))))){
+	// get assets from denom and amount
+	assetA := types.NewPoolAsset(msg.DenomA, msg.AmountA)
+	assetB := types.NewPoolAsset(msg.DenomB, msg.AmountB)
+	// get pool name f/rom asset pair
+	poolName := types.GetPoolNameFromAssetPair(assetA, assetB)
+	// check if pool exists using pool name
+	if k.Keeper.HasPool(ctx, poolName) {
 		// TODO add to errors
-		return &types.MsgJoinPairPoolResponse{}, errors.New("Pool DNE")
+		return &types.MsgCreatePairPoolResponse{}, errors.New("Pool already exists")
 	}
 
-	poolName, shares, err := k.Keeper.JoinPoolPair(ctx, msg)
+	poolId, shares, err := k.Keeper.JoinPoolPair(ctx, msg)
 	if err != nil {
 		return &types.MsgJoinPairPoolResponse{}, err
 	}
 	
+	_, err := k.Keeper.JoinLiqProv(ctx, msg.Creator, shares) 
+	if err != nil {
+		return &types.MsgJoinPairPoolRespoinse{}, err
+	}
+
 	// TODO emit event here?
 
 	return &types.MsgJoinPairPoolResponse{PoolId: poolName, Shares: shares}, nil
@@ -68,15 +99,21 @@ func (k msgServer) ExitPairPool(goCtx context.Context, msg *types.MsgExitPairPoo
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check if pool already exists
-	if !ctx.KVStore(k.storeKey).Has(types.GetPoolKeyFromPoolName(msg.ShareDenom)){
+	if !k.Keeper.HasPool(ctx, msg.ShareDenom){
 		// TODO add to errors
 		return &types.MsgExitPairPoolResponse{}, errors.New("Pool DNE")
 	}
 	
-	poolName, assets, err := k.Keeper.ExitPoolPair(ctx, msg)
+	removedShares, err := k.Keeper.ExitLiqProv(ctx, msg.ShareDenom, msg.Creator)
+	if err != nil {
+		return &types.MsgExitPairPoolResponse{}, err
+	}  
+
+	poolName, assets, err := k.Keeper.ExitPoolPair(ctx, msg, removedShares)
 	if err != nil {
 		return &types.MsgExitPairPoolResponse{}, err
 	}
+
 
 	// TODO emit event here?
 
@@ -87,13 +124,18 @@ func (k msgServer) ExitPairPool(goCtx context.Context, msg *types.MsgExitPairPoo
 func (k msgServer) SwapPair(goCtx context.Context, msg *types.MsgSwapPair) (*types.MsgSwapPairResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	poolName := types.GetPoolNameFromAssets(types.NewPoolAssets(types.NewPoolAsset(msg.DenomIn, msg.AmountIn), types.NewPoolAsset(msg.DenomOut, msg.MinAmountOut)))
-	if !ctx.KVStore(k.storeKey).Has(types.GetPoolKeyFromPoolName(poolName)) {
+	// get assets from denom and amount
+	assetA := types.NewPoolAsset(msg.DenomA, msg.AmountA)
+	assetB := types.NewPoolAsset(msg.DenomB, msg.AmountB)
+	// get pool name f/rom asset pair
+	poolName := types.GetPoolNameFromAssetPair(assetA, assetB)
+	// check pool exists
+	if !k.Keeper.HasPool(ctx, poolName) {
 		// TODO add to errors
 		return &types.MsgSwapPairResponse{}, errors.New("Pool DNE")
 	}
 
-	asset, err := k.Keeper.SwapAssetPair(ctx, msg)
+	assetOut, err := k.Keeper.SwapAssetPair(ctx, msg)
 	if err != nil {
 		return &types.MsgSwapPairResponse{}, err
 	}

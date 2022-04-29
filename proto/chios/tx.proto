@@ -32,6 +32,8 @@ service Msg {
 }
 
 // this line is used by starport scaffolding # proto/tx/message
+
+
 message MsgCreatePairPool {
     string creator = 1;
     string denomA = 2;
@@ -82,10 +84,6 @@ message MsgJoinPairPoolResponse {
 message MsgExitPairPool {
     string creator = 1;
     string shareDenom = 2;
-    string shareAmount = 3 [
-        (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-        (gogoproto.nullable) = false
-    ];
 }
 
 message MsgExitPairPoolResponse {

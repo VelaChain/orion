@@ -23,6 +23,12 @@ func (k Keeper) SetLiqProv(ctx sdk.Context, lp *types.LiquidityProvider) error {
 	return nil
 }
 
+func (k Keeper) HasLiqProv(ctx sdk.Context, poolName string, lpAddr string) bool {
+	key := types.GetProviderKey(poolName, lpAddr)
+	store := ctx.KVStore(k.storeKey)
+	return store.Has(key)
+}
+
 func (k Keeper) GetLiqProv(ctx sdk.Context, poolName string, lpAddr string) (types.LiquidityProvider, error) {
 	var lp types.LiquidityProvider
 	key := types.GetProviderKey(poolName, lpAddr)
