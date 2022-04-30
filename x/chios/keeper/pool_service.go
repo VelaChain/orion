@@ -367,11 +367,21 @@ func (k Keeper) AddLiquidity(ctx sdk.Context, msg *types.MsgAddLiquidityPair) (p
 		// TODO add to errors
 		return poolName, shares, err
 	}
-	if !ctx.KVStore(k.storeKey).Has(types.GetPoolKeyFromPoolName(types.GetPoolNameFromAssets(types.NewPoolAssets(types.NewPoolAsset(msg.DenomA, msg.AmountA), types.NewPoolAsset(msg.DenomB, msg.AmountB))))){
-		// TODO add to errors
-		return poolName, shares, errors.New("Pool DNE") 
-	}
 
+	// use msg data to create pool assets
+	assetA := types.NewPoolAsset(msg.DenomA, msg.AmountA)
+	assetB := types.NewPoolAsset(msg.DenomB, msg.AmountB)
+	// wrap pool assets in pool assets
+	assets := types.NewPoolAssets(assetA, assetB)
+	// get pool name from assets
+	poolName := types.GetPoolNameFromAssets(assets)
+	// get pool
+	pool, err := k.GetPool(ctx, poolName)
+	if err != nil {
+		return assetOut, err
+	}
+	// get share amount out
+	sharesOut := 
 	return poolName, shares, nil 
 }
 

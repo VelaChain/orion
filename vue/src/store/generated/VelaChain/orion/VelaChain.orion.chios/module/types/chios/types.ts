@@ -47,12 +47,16 @@ export interface Pool {
   /** pool shares live in chain (minted and not yet burned) */
   poolShares: PoolShares | undefined;
   /**
-   * liquidity providers for the pool
-   * pool shares should equal the sum of
-   * liquidity providers' shares amounts
-   */
-  liquidityProviders: LiquidityProviders | undefined;
-  /**
+   * /// Pool no LP
+   *
+   * // liquidity providers for the pool
+   * // pool shares should equal the sum of
+   * // liquidity providers' shares amounts
+   * LiquidityProviders liquidityProviders = 4 [
+   * 	(gogoproto.customname) = "Providers",
+   * 	(gogoproto.nullable) = false,
+   * 	(gogoproto.moretags) = "yaml:\"Pool_providers\""
+   * ];
    * fee to swap using pool
    * TODO figure out how fee (charged in native tokens) should
    * be determined for a pool between two external tokens
@@ -452,12 +456,6 @@ export const Pool = {
     if (message.poolShares !== undefined) {
       PoolShares.encode(message.poolShares, writer.uint32(26).fork()).ldelim();
     }
-    if (message.liquidityProviders !== undefined) {
-      LiquidityProviders.encode(
-        message.liquidityProviders,
-        writer.uint32(34).fork()
-      ).ldelim();
-    }
     if (message.swapFee !== "") {
       writer.uint32(42).string(message.swapFee);
     }
@@ -482,12 +480,6 @@ export const Pool = {
           break;
         case 3:
           message.poolShares = PoolShares.decode(reader, reader.uint32());
-          break;
-        case 4:
-          message.liquidityProviders = LiquidityProviders.decode(
-            reader,
-            reader.uint32()
-          );
           break;
         case 5:
           message.swapFee = reader.string();
@@ -520,16 +512,6 @@ export const Pool = {
     } else {
       message.poolShares = undefined;
     }
-    if (
-      object.liquidityProviders !== undefined &&
-      object.liquidityProviders !== null
-    ) {
-      message.liquidityProviders = LiquidityProviders.fromJSON(
-        object.liquidityProviders
-      );
-    } else {
-      message.liquidityProviders = undefined;
-    }
     if (object.swapFee !== undefined && object.swapFee !== null) {
       message.swapFee = String(object.swapFee);
     } else {
@@ -554,10 +536,6 @@ export const Pool = {
       (obj.poolShares = message.poolShares
         ? PoolShares.toJSON(message.poolShares)
         : undefined);
-    message.liquidityProviders !== undefined &&
-      (obj.liquidityProviders = message.liquidityProviders
-        ? LiquidityProviders.toJSON(message.liquidityProviders)
-        : undefined);
     message.swapFee !== undefined && (obj.swapFee = message.swapFee);
     message.exitFee !== undefined && (obj.exitFee = message.exitFee);
     return obj;
@@ -579,16 +557,6 @@ export const Pool = {
       message.poolShares = PoolShares.fromPartial(object.poolShares);
     } else {
       message.poolShares = undefined;
-    }
-    if (
-      object.liquidityProviders !== undefined &&
-      object.liquidityProviders !== null
-    ) {
-      message.liquidityProviders = LiquidityProviders.fromPartial(
-        object.liquidityProviders
-      );
-    } else {
-      message.liquidityProviders = undefined;
     }
     if (object.swapFee !== undefined && object.swapFee !== null) {
       message.swapFee = object.swapFee;

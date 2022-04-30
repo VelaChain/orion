@@ -4,7 +4,6 @@ import { PoolShares, PoolAssets, PoolAsset } from "../chios/types";
 
 export const protobufPackage = "VelaChain.orion.chios";
 
-/** this line is used by starport scaffolding # proto/tx/message */
 export interface MsgCreatePairPool {
   creator: string;
   denomA: string;
@@ -36,7 +35,6 @@ export interface MsgJoinPairPoolResponse {
 export interface MsgExitPairPool {
   creator: string;
   shareDenom: string;
-  shareAmount: string;
 }
 
 export interface MsgExitPairPoolResponse {
@@ -551,11 +549,7 @@ export const MsgJoinPairPoolResponse = {
   },
 };
 
-const baseMsgExitPairPool: object = {
-  creator: "",
-  shareDenom: "",
-  shareAmount: "",
-};
+const baseMsgExitPairPool: object = { creator: "", shareDenom: "" };
 
 export const MsgExitPairPool = {
   encode(message: MsgExitPairPool, writer: Writer = Writer.create()): Writer {
@@ -564,9 +558,6 @@ export const MsgExitPairPool = {
     }
     if (message.shareDenom !== "") {
       writer.uint32(18).string(message.shareDenom);
-    }
-    if (message.shareAmount !== "") {
-      writer.uint32(26).string(message.shareAmount);
     }
     return writer;
   },
@@ -583,9 +574,6 @@ export const MsgExitPairPool = {
           break;
         case 2:
           message.shareDenom = reader.string();
-          break;
-        case 3:
-          message.shareAmount = reader.string();
           break;
         default:
           reader.skipType(tag & 7);
@@ -607,11 +595,6 @@ export const MsgExitPairPool = {
     } else {
       message.shareDenom = "";
     }
-    if (object.shareAmount !== undefined && object.shareAmount !== null) {
-      message.shareAmount = String(object.shareAmount);
-    } else {
-      message.shareAmount = "";
-    }
     return message;
   },
 
@@ -619,8 +602,6 @@ export const MsgExitPairPool = {
     const obj: any = {};
     message.creator !== undefined && (obj.creator = message.creator);
     message.shareDenom !== undefined && (obj.shareDenom = message.shareDenom);
-    message.shareAmount !== undefined &&
-      (obj.shareAmount = message.shareAmount);
     return obj;
   },
 
@@ -635,11 +616,6 @@ export const MsgExitPairPool = {
       message.shareDenom = object.shareDenom;
     } else {
       message.shareDenom = "";
-    }
-    if (object.shareAmount !== undefined && object.shareAmount !== null) {
-      message.shareAmount = object.shareAmount;
-    } else {
-      message.shareAmount = "";
     }
     return message;
   },

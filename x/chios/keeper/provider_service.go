@@ -50,9 +50,10 @@ func (k Keeper) AddLiqToProv(ctx sdk.Context, creator string, shares types.PoolS
 	if err != nil {
 		return nil, err
 	}
+	return lp, nil
 }
 
-func (k Keeper) RemoveLiqFromProv(ctx sdk.Context, poolName string, lpAddr string, shares Types.PoolShares) error {
+func (k Keeper) RemoveLiqFromProv(ctx sdk.Context, poolName string, lpAddr string, shares Types.PoolShares) (types.LiquidityProvider, error) {
 	// Get liq prov
 	lp, err := k.GetLiqProv(ctx, shares.Symbol, creator)
 	if err != nil {

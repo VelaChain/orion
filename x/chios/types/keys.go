@@ -63,15 +63,15 @@ func PrefixKey(key string) []byte {
 
 func GetPoolNameFromAssetPair(assetA PoolAsset, assetB PoolAsset) string{
 	assets := NewPoolAssets(assetA, assetB)
-	return GetPoolKeyFromAssets(assets)
+	return GetPoolNameFromAssets(assets)
 }
 
 func GetPoolNameFromAssets(pa PoolAssets) string {
 	// sort assets by name
 	sort.Sort(pa)
 	// create name w/ scheme: a-b-...-n
-	name := pa.Assets[0].Symbol
-	for i, a := range pa.Assets {
+	name := pa.Asset[0].Symbol
+	for i, a := range pa.Asset {
 		if i > 0 {
 			name += fmt.Sprintf("-%s", a.Symbol)
 		}

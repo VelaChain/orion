@@ -1,13 +1,15 @@
 package types
 
 import (
-	
+	"errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	//balancer "github.com/osmosis-labs/osmosis/v7/x/gamm/pool-models/balancer"
 )
 // make pool assets implement sort
-func (pa PoolAssets) Len() int			{ return len(pa.Assets) }
-func (pa PoolAssets) Swap(i, j int)		{ pa.Assets[i], pa.Assets[j] = pa.Assets[j], pa.Assets[i] }
-func (pa PoolAssets) Less(i, j int) bool	{ return pa.Assets[i].Symbol < pa.Assets[j].Symbol }
+func (pa PoolAssets) Len() int			{ return len(pa.Asset) }
+func (pa PoolAssets) Swap(i, j int)		{ pa.Asset[i], pa.Asset[j] = pa.Asset[j], pa.Asset[i] }
+func (pa PoolAssets) Less(i, j int) bool	{ return pa.Asset[i].Symbol < pa.Asset[j].Symbol }
 
 // TODO 
 func (lp LiquidityProvider) Validate() bool {
@@ -67,7 +69,7 @@ func NewPoolAsset(symbol string, amount sdk.Int) PoolAsset{
 func NewPoolAssets(assets ...PoolAsset) PoolAssets {
 	var pa PoolAssets
 	for _, a := range assets {
-		pa.Assets = append(pa.Assets, a)
+		pa.Asset = append(pa.Asset, a)
 	}
 	return pa 
 }
@@ -81,30 +83,69 @@ func NewPoolShares(symbol string, amount sdk.Int) PoolShares{
 }
 
 func ValidJoinRatio(poolPA PoolAssets, addPA PoolAssets) bool {
-	return (poolPA.Assets[0].Amount.Mul(addPA.Assets[1].Amount)).Equal(poolPA.Assets[1].Amount.Mul(addPA.Assets[0].Amount))
+	return (poolPA.Asset[0].Amount.Mul(addPA.Asset[1].Amount)).Equal(poolPA.Asset[1].Amount.Mul(addPA.Asset[0].Amount))
 }
 
 func GetSharesOut(p Pool, assetsIn PoolAssets) sdk.Int {
-	return assetsIn.Assets[0].Amount.Mul(p.Shares.Amount).Quo(p.Assets.Assets[0].Amount)
+	return assetsIn.Asset[0].Amount.Mul(p.Shares.Amount).Quo(p.Assets.Asset[0].Amount)
 }
 
-func GetAssetPairOut(p Pool, shareAmtIn skd.Int) (sdk.Int, sdk.Int) {
-	// ownerhip % =  share in / share total
-	proportion := float64(shareAmtIn) / float64(p.Shares.Amount)
+func GetAssetPairOut(p Pool, shareAmtIn sdk.Int) (sdk.Int, sdk.Int) {
 	// get amounts out
-	amountOutA := proportion * float64(p.Assets.Asset[0].Amount)
-	amountOutB := proportion * float64(p.Assets.Asset[1].Amount)
+	amountOutA :=  shareAmtIn.Quo(p.Shares.Amount).Mul(p.Assets.Asset[0].Amount)
+	amountOutB :=  shareAmtIn.Quo(p.Shares.Amount).Mul(p.Assets.Asset[1].Amount)
 	return amountOutA, amountOutB
 }
 
-func GetAssetPairSwapOut(pa PoolAssets, assetIn PoolAsset) PoolAsset {
-	var assetOut PoolAsset
-	if assetIn.Symbol == pa.Asset[0].Symbol {
-		assetOut.Symbol = pa.Asset[1].Symbol
-		assetOut.Amount = sdk.NewInt(int64(float64(assetIn.Amount)*float64(pa.Asset[1].Amount)/float64(pa.Asset[0].Amount)))
+// from osmosis' balancer package
+func solveConstantFunctionInvariant(
+	tokenBalanceFixedBefore,
+	tokenBalanceFixedAfter,
+	tokenWeightFixed,
+	tokenBalanceUnknownBefore,
+	tokenWeightUnknown sdk.Dec,
+) sdk.Dec {
+	// weightRatio = (weightX/weightY)
+	weightRatio := tokenWeightFixed.Quo(tokenWeightUnknown)
+
+	// y = balanceXBefore/balanceXAfter
+	y := tokenBalanceFixedBefore.Quo(tokenBalanceFixedAfter)
+
+	// amountY = balanceY * (1 - (y ^ weightRatio))
+	yToWeightRatio := Pow(y, weightRatio)
+	paranthetical := sdk.OneDec().Sub(yToWeightRatio)
+	amountY := tokenBalanceUnknownBefore.Mul(paranthetical)
+	return amountY
+}
+
+func GetAssetPairSwapOut(pa PoolAssets, assetIn PoolAsset, swapFee sdk.Dec) (PoolAsset, error){
+	// identify swapping in and out assets from pool
+	var poolAssetIn PoolAsset
+	var poolAssetOut PoolAsset
+	if pa.Asset[0].Symbol == assetIn.Symbol {
+		poolAssetIn = pa.Asset[0]
+		poolAssetOut = pa.Asset[1]
 	} else {
-		assetOut.Symbol = pa.Asset[0].Symbol
-		assetOut.Amount = sdk.NewInt(int64(float64(assetIn.Amount)*float64(pa.Asset[0].Amount)/float64(pa.Asset[1].Amount)))
+		poolAssetIn = pa.Asset[1]
+		poolAssetOut = pa.Asset[0]
 	}
-	return assetOut
+	// set up parameters to solve constant invariant func from balancer
+	assetInPostFee := assetIn.Amount.ToDec().Mul(sdk.OneDec().Sub(swapFee))
+	poolAssetInBalance := poolAssetIn.Amount.ToDec()
+	poolPostSwapInBalance := poolAssetInBalance.Add(assetInPostFee)
+	// use invariant to get sdk dec amount out
+	tokenAmountOut := solveConstantFunctionInvariant(
+		poolAssetInBalance,
+		poolPostSwapInBalance,
+		poolAssetIn.Amount.ToDec(),
+		poolAssetOut.Amount.ToDec(),
+		poolAssetOut.Amount.ToDec(),
+	)
+
+	tokenOutInt := tokenAmountOut.TruncateInt()
+	if !tokenOutInt.IsPositive(){
+		return nil, errors.New("token out int negative")
+	}
+
+	return NewPoolAsset(poolAssetOut.Symbol, tokenOutInt), nil
 }
